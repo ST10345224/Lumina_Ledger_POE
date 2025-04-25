@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "586537643285",
+    "project_id": "lumina-ledger-poe",
+    "storage_bucket": "lumina-ledger-poe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:586537643285:android:b85795627f0fa06486cd1c",
+        "android_client_info": {
+          "package_name": "com.st10345224.luminaledgerpoe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPLd4QMLGZh1OBo6IlfYHidUcYXwJ1pt4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
