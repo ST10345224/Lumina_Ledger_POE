@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
                     if (isSplashScreenVisible) {
                         SplashScreen() // Now calling the SplashScreen composable from its own file
                     } else if (isLoggedIn) {
-                        //MainApp() // Navbar and main screen
+                        NavigationMap() // Calling the navbar and navigation
 
                     } else {
                         if (isRegistering) {

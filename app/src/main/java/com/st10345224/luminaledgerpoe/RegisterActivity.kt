@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -116,7 +117,10 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit, onRegistrationSuccess: () -> U
                         value = firstName,
                         onValueChange = { firstName = it },
                         label = { Text("First Name") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                        )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -124,7 +128,10 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit, onRegistrationSuccess: () -> U
                         value = lastName,
                         onValueChange = { lastName = it },
                         label = { Text("Last Name") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                        )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -132,7 +139,10 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit, onRegistrationSuccess: () -> U
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                        )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -141,7 +151,10 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit, onRegistrationSuccess: () -> U
                         onValueChange = { password = it },
                         label = { Text("Password") },
                         visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                        )
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -160,7 +173,7 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit, onRegistrationSuccess: () -> U
                                                     email = email
                                                 )
 
-                                                firestore.collection("users")
+                                                firestore.collection("Users")
                                                     .document(it.uid)
                                                     .set(userData)
                                                     .addOnSuccessListener {
