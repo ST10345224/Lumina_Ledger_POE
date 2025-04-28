@@ -101,7 +101,7 @@ fun BottomNavigationBar(navController: NavHostController) {
 // Screen Composables - put screen functions here
 @Composable
 fun ProfileScreen() {
-   // UserProfileScreen()
+   UserProfileScreen()
 }
 
 @Composable
