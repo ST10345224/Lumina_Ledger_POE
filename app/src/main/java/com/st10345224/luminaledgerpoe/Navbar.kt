@@ -28,9 +28,9 @@ data class Screen(val route: String, val title: String, val icon: ImageVector)
 
 // Define the Screens that can be navigated to
 val profileScreen = Screen("profile", "Profile", Icons.Filled.Person)
-val homeScreen = Screen("feed", "Feed", Icons.Filled.Home)
-val ledgerScreen = Screen("settings", "Settings", Icons.Filled.List)
-val newExpenseScreen = Screen("newPost", "New Post", Icons.Filled.Add)
+val homeScreen = Screen("home", "Home", Icons.Filled.Home)
+val ledgerScreen = Screen("ledger", "Ledger", Icons.Filled.List)
+val newExpenseScreen = Screen("newExpense", "New Expense", Icons.Filled.Add)
 
 // Create the List of Screens
 val screens = listOf(profileScreen, homeScreen, ledgerScreen, newExpenseScreen)
@@ -49,22 +49,22 @@ fun NavigationMap() {
             modifier = Modifier.padding(paddingValues)  // Apply padding to NavHost
         ) {
             composable(route = profileScreen.route) { ProfileScreen() }
-            composable(route = homeScreen.route) { FeedScreen() }
-            composable(route = ledgerScreen.route) { SettingsScreen() } 
+            composable(route = homeScreen.route) { HomeScreen() }
+            composable(route = ledgerScreen.route) { LedgerScreen() }
             composable(route = newExpenseScreen.route) {
                 // Call CreatePostScreen and pass the callback
-//                CreatePostScreen(onPostCreated = {
-//                    // Define what happens after a post is created
-//                    navController.navigate(feedScreen.route) { // Go back to feed
-//                        popUpTo(newPostScreen.route) { inclusive = true } // Remove new post screen from backstack, otherwise it will stay open
-//                    }
-//                    // Optionally show a message
-//                    Toast.makeText(
-//                        navController.context,
-//                        "Post created!",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
-//                })
+                AddExpenseScreen (onExpenseAdded = {
+                    // Define what happens after a post is created
+                    navController.navigate(ledgerScreen.route) { // Go back to feed
+                        popUpTo(newExpenseScreen.route) { inclusive = true } // Remove new post screen from backstack, otherwise it will stay open
+                    }
+                    // Optionally show a message
+                    Toast.makeText(
+                        navController.context,
+                        "Expense created!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                })
             }
         }
     }
@@ -105,12 +105,12 @@ fun ProfileScreen() {
 }
 
 @Composable
-fun FeedScreen() {
-   // SocialMediaFeed()
+fun HomeScreen() {
+    Text("Home Screen Content")
 }
 
-// No settings screen yet, just displays message
+
 @Composable
-fun SettingsScreen() {
-    Text("Settings Screen Content")
+fun LedgerScreen() {
+    Text("Ledger Screen Content")
 }

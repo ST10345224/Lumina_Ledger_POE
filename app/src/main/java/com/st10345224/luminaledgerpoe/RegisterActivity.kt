@@ -160,7 +160,7 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit, onRegistrationSuccess: () -> U
                                                     email = email
                                                 )
 
-                                                firestore.collection("users")
+                                                firestore.collection("Users")
                                                     .document(it.uid)
                                                     .set(userData)
                                                     .addOnSuccessListener {
