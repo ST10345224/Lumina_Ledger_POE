@@ -34,9 +34,10 @@ val ledgerScreen = Screen("ledger", "Ledger", Icons.Filled.List)
 val goalScreen = Screen("goals", "Goals", Icons.Filled.CheckCircle)
 val newExpenseScreen = Screen("newExpense", "New Expense", Icons.Filled.Add)
 val addGoalScreen = Screen("addGoal", "Add Goal", Icons.Filled.Add)
+val categoryScreen = Screen("category", "Category", Icons.Filled.Settings)
 
 // Create the List of Screens
-val screens = listOf(profileScreen, homeScreen, ledgerScreen, goalScreen, newExpenseScreen)
+val screens = listOf(profileScreen, homeScreen, categoryScreen, ledgerScreen, goalScreen, newExpenseScreen)
 // Main App Composable with Navigation logic
 @Composable
 fun NavigationMap() {
@@ -53,7 +54,8 @@ fun NavigationMap() {
         ) {
             composable(route = profileScreen.route) { ProfileScreen() }
             composable(route = homeScreen.route) { HomeScreen() }
-            composable(route = ledgerScreen.route) { LedgerScreen() }
+            composable(route = categoryScreen.route) { CategoriesScreen() }
+            composable(route = ledgerScreen.route) { ledgerScreen() }
             composable(route = goalScreen.route) {
                 GoalsScreen(onAddGoal = {
                     navController.navigate(addGoalScreen.route) // Navigate to AddGoalScreen
@@ -125,14 +127,14 @@ fun ProfileScreen() {
 }
 
 @Composable
-fun HomeScreen() {
+fun Home() {
     Text("Home Screen Content")
 }
 
 
 @Composable
-fun LedgerScreen() {
-    Text("Ledger Screen Content")
+fun ledgerScreen() {
+    LedgerScreen()
 }
 
 @Composable
