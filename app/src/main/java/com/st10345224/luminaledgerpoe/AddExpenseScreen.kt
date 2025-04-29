@@ -12,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.content.ContextCompat
@@ -131,156 +133,187 @@ fun AddExpenseScreen(onExpenseAdded: (Expense) -> Unit) {
         uri?.let { selectedImageUri = it }
     }
 
-    LaunchedEffect(selectedImageUri) {
-        selectedImageUri?.let { uri ->
-            imageBitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.splashbackground), // Replace with your image resource
+            contentDescription = null, // Decorative image, no need for description
+            contentScale = ContentScale.Crop, // Or ContentScale.FillBounds, etc.
+            modifier = Modifier.fillMaxSize()
+        )
+        LaunchedEffect(selectedImageUri) {
+            selectedImageUri?.let { uri ->
+                imageBitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+            }
         }
-    }
 
-    // Fetch categories from Firestore
-    LaunchedEffect(key1 = true) {
-        firestore.collection("Category")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                val categoryList = querySnapshot.documents.mapNotNull { it.getString("name") }
-                categories = categoryList
-            }
-            .addOnFailureListener { e ->
-                Log.e("AddExpenseScreen", "Error fetching categories: ${e.message}")
-                Toast.makeText(context, "Failed to load categories.", Toast.LENGTH_SHORT).show()
-            }
-    }
+        // Fetch categories from Firestore
+        LaunchedEffect(key1 = true) {
+            firestore.collection("Category")
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    val categoryList = querySnapshot.documents.mapNotNull { it.getString("name") }
+                    categories = categoryList
+                }
+                .addOnFailureListener { e ->
+                    Log.e("AddExpenseScreen", "Error fetching categories: ${e.message}")
+                    Toast.makeText(context, "Failed to load categories.", Toast.LENGTH_SHORT).show()
+                }
+        }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Add New Expense", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(bottom = 16.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "Add New Expense",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
-        OutlinedTextField(
-            value = expenseTitle,
-            onValueChange = { expenseTitle = it },
-            label = { Text("Title") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Category Dropdown
-        CategoryDropdown(
-            categories = categories,
-            selectedCategory = expenseCategory,
-            onCategorySelected = { category -> expenseCategory = category }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Currency Dropdown
-        CurrencyDropdown(
-            currencies = currencies,
-            selectedCurrency = selectedCurrency,
-            onCurrencySelected = { currency -> selectedCurrency = currency }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = expenseAmount,
-            onValueChange = { expenseAmount = it },
-            label = { Text("Amount") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = expenseDescription,
-            onValueChange = { expenseDescription = it },
-            label = { Text("Description (Optional)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (imageBitmap != null) {
-            Image(
-                bitmap = imageBitmap!!.asImageBitmap(),
-                contentDescription = "Expense Photo",
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
+            OutlinedTextField(
+                value = expenseTitle,
+                onValueChange = { expenseTitle = it },
+                label = { Text("Title") },
+                modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
-        }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            Button(onClick = { galleryLauncher.launch("image/*") }) {
-                Text("Select Photo")
+            // Category Dropdown
+            CategoryDropdown(
+                categories = categories,
+                selectedCategory = expenseCategory,
+                onCategorySelected = { category -> expenseCategory = category }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Currency Dropdown
+            CurrencyDropdown(
+                currencies = currencies,
+                selectedCurrency = selectedCurrency,
+                onCurrencySelected = { currency -> selectedCurrency = currency }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = expenseAmount,
+                onValueChange = { expenseAmount = it },
+                label = { Text("Amount") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = expenseDescription,
+                onValueChange = { expenseDescription = it },
+                label = { Text("Description (Optional)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (imageBitmap != null) {
+                Image(
+                    bitmap = imageBitmap!!.asImageBitmap(),
+                    contentDescription = "Expense Photo",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
-            Button(onClick = {
-                val uri = createImageFile(context)
-                cameraImageUri = uri
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                    uri?.let { takePicture.launch(it) }
-                } else {
-                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Button(onClick = { galleryLauncher.launch("image/*") }) {
+                    Text("Select Photo")
                 }
-            }) {
-                Text("Take Photo")
-            }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                val amount = expenseAmount.toDoubleOrNull()
-                if (expenseTitle.isNotBlank() && expenseCategory.isNotBlank() && amount != null) {
-                    val base64Image = imageBitmap?.let {
-                        val compressedBytes = compressBitmap(it)
-                        encodeToBase64(compressedBytes)
-                    } ?: ""
-                    val exId = UUID.randomUUID().toString()
-                    val currentDate = Date() // Get the current date and time
-                    val newExpense = Expense(
-                        exID = exId,
-                        UserID = userId,
-                        Category = expenseCategory,
-                        exAmount = amount,
-                        Date = Timestamp.now(), // Convert Date to String for simplicity
-                        exDescription = expenseDescription,
-                        exPhotoString = base64Image,
-                        Currency = selectedCurrency,
-                        exTitle = expenseTitle
-                    )
-                    coroutineScope.launch {
-                        firestore.collection("Expenses")
-                            .add(newExpense)
-                            .addOnSuccessListener { documentReference ->
-                                Log.d("AddExpenseScreen", "Expense added with ID: ${documentReference.id}")
-                                Toast.makeText(context, "Expense added successfully!", Toast.LENGTH_SHORT).show()
-                                // Optionally clear fields after successful addition
-                                expenseTitle = ""
-                                expenseCategory = ""
-                                expenseAmount = ""
-                                expenseDescription = ""
-                                selectedImageUri = null
-                                imageBitmap = null
-                            }
-                            .addOnFailureListener { e ->
-                                Log.e("AddExpenseScreen", "Error adding expense: ${e.message}")
-                                Toast.makeText(context, "Failed to add expense.", Toast.LENGTH_SHORT).show()
-                            }
+                Button(onClick = {
+                    val uri = createImageFile(context)
+                    cameraImageUri = uri
+                    if (ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        uri?.let { takePicture.launch(it) }
+                    } else {
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
-                    onExpenseAdded(newExpense)
-                } else {
-                    Toast.makeText(context, "Please fill in all required details.", Toast.LENGTH_SHORT).show()
+                }) {
+                    Text("Take Photo")
                 }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Add Expense")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    val amount = expenseAmount.toDoubleOrNull()
+                    if (expenseTitle.isNotBlank() && expenseCategory.isNotBlank() && amount != null) {
+                        val base64Image = imageBitmap?.let {
+                            val compressedBytes = compressBitmap(it)
+                            encodeToBase64(compressedBytes)
+                        } ?: ""
+                        val exId = UUID.randomUUID().toString()
+                        val currentDate = Date() // Get the current date and time
+                        val newExpense = Expense(
+                            exID = exId,
+                            UserID = userId,
+                            Category = expenseCategory,
+                            exAmount = amount,
+                            Date = Timestamp.now(), // Convert Date to String for simplicity
+                            exDescription = expenseDescription,
+                            exPhotoString = base64Image,
+                            Currency = selectedCurrency,
+                            exTitle = expenseTitle
+                        )
+                        coroutineScope.launch {
+                            firestore.collection("Expenses")
+                                .add(newExpense)
+                                .addOnSuccessListener { documentReference ->
+                                    Log.d(
+                                        "AddExpenseScreen",
+                                        "Expense added with ID: ${documentReference.id}"
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        "Expense added successfully!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    // Optionally clear fields after successful addition
+                                    expenseTitle = ""
+                                    expenseCategory = ""
+                                    expenseAmount = ""
+                                    expenseDescription = ""
+                                    selectedImageUri = null
+                                    imageBitmap = null
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.e("AddExpenseScreen", "Error adding expense: ${e.message}")
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to add expense.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                        }
+                        onExpenseAdded(newExpense)
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Please fill in all required details.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Add Expense")
+            }
         }
     }
 }

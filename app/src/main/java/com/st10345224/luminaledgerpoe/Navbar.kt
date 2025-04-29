@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
@@ -30,10 +31,12 @@ data class Screen(val route: String, val title: String, val icon: ImageVector)
 val profileScreen = Screen("profile", "Profile", Icons.Filled.Person)
 val homeScreen = Screen("home", "Home", Icons.Filled.Home)
 val ledgerScreen = Screen("ledger", "Ledger", Icons.Filled.List)
+val goalScreen = Screen("goals", "Goals", Icons.Filled.CheckCircle)
 val newExpenseScreen = Screen("newExpense", "New Expense", Icons.Filled.Add)
+val addGoalScreen = Screen("addGoal", "Add Goal", Icons.Filled.Add)
 
 // Create the List of Screens
-val screens = listOf(profileScreen, homeScreen, ledgerScreen, newExpenseScreen)
+val screens = listOf(profileScreen, homeScreen, ledgerScreen, goalScreen, newExpenseScreen)
 // Main App Composable with Navigation logic
 @Composable
 fun NavigationMap() {
@@ -51,6 +54,11 @@ fun NavigationMap() {
             composable(route = profileScreen.route) { ProfileScreen() }
             composable(route = homeScreen.route) { HomeScreen() }
             composable(route = ledgerScreen.route) { LedgerScreen() }
+            composable(route = goalScreen.route) {
+                GoalsScreen(onAddGoal = {
+                    navController.navigate(addGoalScreen.route) // Navigate to AddGoalScreen
+                })
+            }
             composable(route = newExpenseScreen.route) {
                 // Call CreatePostScreen and pass the callback
                 AddExpenseScreen (onExpenseAdded = {
@@ -62,6 +70,18 @@ fun NavigationMap() {
                     Toast.makeText(
                         navController.context,
                         "Expense created!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                })
+            }
+            composable(route = addGoalScreen.route){ //Added route for AddGoalScreen
+                AddGoalScreen(onGoalAdded = {
+                    navController.navigate(goalScreen.route){
+                        popUpTo(addGoalScreen.route){inclusive = true}
+                    }
+                    Toast.makeText(
+                        navController.context,
+                        "Goal Added",
                         Toast.LENGTH_SHORT
                     ).show()
                 })
@@ -101,7 +121,7 @@ fun BottomNavigationBar(navController: NavHostController) {
 // Screen Composables - put screen functions here
 @Composable
 fun ProfileScreen() {
-   UserProfileScreen()
+    UserProfileScreen()
 }
 
 @Composable
@@ -113,4 +133,9 @@ fun HomeScreen() {
 @Composable
 fun LedgerScreen() {
     Text("Ledger Screen Content")
+}
+
+@Composable
+fun GoalScreen() {
+    GoalsScreen(onAddGoal = {})
 }
