@@ -12,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -71,252 +72,304 @@ fun UserProfileScreen() {
     var isEditing by remember { mutableStateOf(false) }  // Track if the user is in edit mode
     var loading by remember { mutableStateOf(true) }
 
-    // Fetch user data from Firestore when the screen is loaded or when the user changes.
-    LaunchedEffect(currentUser?.uid) {
-        if (currentUser != null) {
-            loading = true
-            firestore.collection("Users").document(currentUser.uid)
-                .get()
-                .addOnSuccessListener { document ->
-                    if (document.exists()) {
-                        // Map the document data to the User data class.
-                        user = User(
-                            userId = document.getString("userId") ?: currentUser.uid,
-                            firstName = document.getString("firstName") ?: "",
-                            lastName = document.getString("lastName") ?: "",
-                            email = document.getString("email") ?: currentUser.email ?: "",
-                            profilePicString = document.getString("profilePicString"),
-                        )
-                        // Initialize the state variables with the fetched data.
-                        firstName = user?.firstName ?: ""
-                        lastName = user?.lastName ?: ""
-                        email = user?.email ?: ""
-                        user?.profilePicString?.let {
-                            try {
-                                val imageBytes = decodeBase64(it)
-                                profilePicBitmap = bytesToBitmap(imageBytes)
-                            } catch (e: Exception) {
-                                Log.e("ProfileScreen", "Error decoding profile picture: ${e.message}")
-                                Toast.makeText(context, "Error loading profile picture", Toast.LENGTH_SHORT).show()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.splashbackground), // Replace with your image resource
+            contentDescription = null, // Decorative image, no need for description
+            contentScale = ContentScale.Crop, // Or ContentScale.FillBounds, etc.
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Fetch user data from Firestore when the screen is loaded or when the user changes.
+        LaunchedEffect(currentUser?.uid) {
+            if (currentUser != null) {
+                loading = true
+                firestore.collection("Users").document(currentUser.uid)
+                    .get()
+                    .addOnSuccessListener { document ->
+                        if (document.exists()) {
+                            // Map the document data to the User data class.
+                            user = User(
+                                userId = document.getString("userId") ?: currentUser.uid,
+                                firstName = document.getString("firstName") ?: "",
+                                lastName = document.getString("lastName") ?: "",
+                                email = document.getString("email") ?: currentUser.email ?: "",
+                                profilePicString = document.getString("profilePicString"),
+                            )
+                            // Initialize the state variables with the fetched data.
+                            firstName = user?.firstName ?: ""
+                            lastName = user?.lastName ?: ""
+                            email = user?.email ?: ""
+                            user?.profilePicString?.let {
+                                try {
+                                    val imageBytes = decodeBase64(it)
+                                    profilePicBitmap = bytesToBitmap(imageBytes)
+                                } catch (e: Exception) {
+                                    Log.e(
+                                        "ProfileScreen",
+                                        "Error decoding profile picture: ${e.message}"
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        "Error loading profile picture",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
+                        } else {
+                            // If the user document doesn't exist, create a default User object.
+                            user = User(
+                                userId = currentUser.uid,
+                                firstName = "",
+                                lastName = "",
+                                email = currentUser.email ?: "", // Use email from Firebase Auth
+                                profilePicString = null
+                            )
+                            // Initialize state variables.
+                            firstName = ""
+                            lastName = ""
+                            email = currentUser.email ?: ""
                         }
-                    } else {
-                        // If the user document doesn't exist, create a default User object.
-                        user = User(
-                            userId = currentUser.uid,
-                            firstName = "",
-                            lastName = "",
-                            email = currentUser.email ?: "", // Use email from Firebase Auth
-                            profilePicString = null
-                        )
-                        // Initialize state variables.
-                        firstName = ""
-                        lastName = ""
-                        email = currentUser.email ?: ""
-                    }
-                    loading = false
-                }
-                .addOnFailureListener { e ->
-                    Log.e("UserProfileScreen", "Error fetching user data: ${e.message}")
-                    Toast.makeText(context, "Failed to load user data: ${e.message}", Toast.LENGTH_LONG).show()
-                    loading = false
-                }
-        }
-    }
-
-    // Activity launcher for selecting an image from the gallery
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK && result.data != null) {
-            val imageUri = result.data?.data
-            try {
-                // Load the image into a Bitmap.  Consider resizing here to save memory.
-                val inputStream = imageUri?.let { context.contentResolver.openInputStream(it) }
-                profilePicBitmap = BitmapFactory.decodeStream(inputStream)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(context, "Failed to load image", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    // Function to handle saving the user data to Firestore.
-    fun saveUserData() {
-        if (currentUser != null) {
-            val userRef = firestore.collection("Users").document(currentUser.uid)
-
-            // Prepare the data to be updated.
-            val updates = hashMapOf<String, Any>(
-                "firstName" to firstName,
-                "lastName" to lastName,
-                "email" to email, //update email in firestore
-            )
-
-            // Handle profile picture upload if a new one is selected
-            if (profilePicBitmap != null) {
-                val baos = ByteArrayOutputStream()
-                profilePicBitmap?.compress(Bitmap.CompressFormat.JPEG, 80, baos) // Compress the image.
-                val data = baos.toByteArray()
-                val profilePicString = Base64.encodeToString(data, Base64.DEFAULT)
-                updates["profilePicString"] = profilePicString
-                userRef.update(updates)
-                    .addOnSuccessListener {
-                        Toast.makeText(context, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
-                        isEditing = false // Exit edit mode after successful save.
-                        user = user?.copy(firstName = firstName, lastName = lastName, email = email, profilePicString = profilePicString)
+                        loading = false
                     }
                     .addOnFailureListener { e ->
-                        Log.e("UserProfileScreen", "Error updating profile: ${e.message}")
-                        Toast.makeText(context, "Failed to update profile: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-            } else {
-                // If no new profile picture, just update the text fields.
-                userRef.update(updates)
-                    .addOnSuccessListener {
-                        Toast.makeText(context, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
-                        isEditing = false // Exit edit mode after successful save.
-                        user = user?.copy(firstName = firstName, lastName = lastName, email = email)
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e("UserProfileScreen", "Error updating profile: ${e.message}")
-                        Toast.makeText(context, "Failed to update profile: ${e.message}", Toast.LENGTH_LONG).show()
+                        Log.e("UserProfileScreen", "Error fetching user data: ${e.message}")
+                        Toast.makeText(
+                            context,
+                            "Failed to load user data: ${e.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        loading = false
                     }
             }
         }
-    }
 
-    if (loading) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator()
-            Text("Loading profile...")
+        // Activity launcher for selecting an image from the gallery
+        val galleryLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == android.app.Activity.RESULT_OK && result.data != null) {
+                val imageUri = result.data?.data
+                try {
+                    // Load the image into a Bitmap.  Consider resizing here to save memory.
+                    val inputStream = imageUri?.let { context.contentResolver.openInputStream(it) }
+                    profilePicBitmap = BitmapFactory.decodeStream(inputStream)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(context, "Failed to load image", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()), // Make the column scrollable
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Profile Picture
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+
+        // Function to handle saving the user data to Firestore.
+        fun saveUserData() {
+            if (currentUser != null) {
+                val userRef = firestore.collection("Users").document(currentUser.uid)
+
+                // Prepare the data to be updated.
+                val updates = hashMapOf<String, Any>(
+                    "firstName" to firstName,
+                    "lastName" to lastName,
+                    "email" to email, //update email in firestore
+                )
+
+                // Handle profile picture upload if a new one is selected
                 if (profilePicBitmap != null) {
-                    Image(
-                        bitmap = profilePicBitmap!!.asImageBitmap(),
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop,
-                    )
+                    val baos = ByteArrayOutputStream()
+                    profilePicBitmap?.compress(
+                        Bitmap.CompressFormat.JPEG,
+                        80,
+                        baos
+                    ) // Compress the image.
+                    val data = baos.toByteArray()
+                    val profilePicString = Base64.encodeToString(data, Base64.DEFAULT)
+                    updates["profilePicString"] = profilePicString
+                    userRef.update(updates)
+                        .addOnSuccessListener {
+                            Toast.makeText(
+                                context,
+                                "Profile updated successfully!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            isEditing = false // Exit edit mode after successful save.
+                            user = user?.copy(
+                                firstName = firstName,
+                                lastName = lastName,
+                                email = email,
+                                profilePicString = profilePicString
+                            )
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("UserProfileScreen", "Error updating profile: ${e.message}")
+                            Toast.makeText(
+                                context,
+                                "Failed to update profile: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                 } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground), //changed to ic_launcher_foreground,
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-                if (isEditing) {
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Button(onClick = {
-                        // Launch gallery to select a new profile picture.
-                        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-                        galleryLauncher.launch(intent)
-                    }) {
-                        Text("Change Picture")
-                    }
+                    // If no new profile picture, just update the text fields.
+                    userRef.update(updates)
+                        .addOnSuccessListener {
+                            Toast.makeText(
+                                context,
+                                "Profile updated successfully!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            isEditing = false // Exit edit mode after successful save.
+                            user = user?.copy(
+                                firstName = firstName,
+                                lastName = lastName,
+                                email = email
+                            )
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("UserProfileScreen", "Error updating profile: ${e.message}")
+                            Toast.makeText(
+                                context,
+                                "Failed to update profile: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // First Name
-            OutlinedTextField(
-                value = firstName,
-                onValueChange = { firstName = it },
-                label = { Text("First Name") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = isEditing,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                ),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Last Name
-            OutlinedTextField(
-                value = lastName,
-                onValueChange = { lastName = it },
-                label = { Text("Last Name") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = isEditing,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                ),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Email
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = false, // Email is not editable here,  //make email uneditable
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Done
-                ),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // enable Edit/Save Button
-            if (isEditing) {
+        if (loading) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator()
+                Text("Loading profile...")
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()), // Make the column scrollable
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Profile Picture
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(onClick = {
-                        // Save the changes
-                        saveUserData()
-                    }) {
-                        Text("Save")
+                    if (profilePicBitmap != null) {
+                        Image(
+                            bitmap = profilePicBitmap!!.asImageBitmap(),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground), //changed to ic_launcher_foreground,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    OutlinedButton(onClick = {
-                        // Cancel editing, revert to original data.
-                        isEditing = false
-                        firstName = user?.firstName ?: ""
-                        lastName = user?.lastName ?: ""
-                        email = user?.email ?: ""
-                        profilePicBitmap = null // Clear the selected image.
-                    }) {
-                        Text("Cancel")
+                    if (isEditing) {
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Button(onClick = {
+                            // Launch gallery to select a new profile picture.
+                            val intent = Intent(
+                                Intent.ACTION_PICK,
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                            )
+                            galleryLauncher.launch(intent)
+                        }) {
+                            Text("Change Picture")
+                        }
                     }
                 }
-            } else {
-                Button(onClick = {
-                    // Enter edit mode
-                    isEditing = true
-                }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Edit Profile")
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // First Name
+                OutlinedTextField(
+                    value = firstName,
+                    onValueChange = { firstName = it },
+                    label = { Text("First Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = isEditing,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    ),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Last Name
+                OutlinedTextField(
+                    value = lastName,
+                    onValueChange = { lastName = it },
+                    label = { Text("Last Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = isEditing,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    ),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Email
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = false, // Email is not editable here,  //make email uneditable
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Done
+                    ),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // enable Edit/Save Button
+                if (isEditing) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(onClick = {
+                            // Save the changes
+                            saveUserData()
+                        }) {
+                            Text("Save")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        OutlinedButton(onClick = {
+                            // Cancel editing, revert to original data.
+                            isEditing = false
+                            firstName = user?.firstName ?: ""
+                            lastName = user?.lastName ?: ""
+                            email = user?.email ?: ""
+                            profilePicBitmap = null // Clear the selected image.
+                        }) {
+                            Text("Cancel")
+                        }
+                    }
+                } else {
+                    Button(onClick = {
+                        // Enter edit mode
+                        isEditing = true
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Edit Profile")
+                    }
                 }
             }
         }
