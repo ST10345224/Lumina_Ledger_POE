@@ -75,7 +75,7 @@ fun UserProfileScreen() {
     LaunchedEffect(currentUser?.uid) {
         if (currentUser != null) {
             loading = true
-            firestore.collection("users").document(currentUser.uid)
+            firestore.collection("Users").document(currentUser.uid)
                 .get()
                 .addOnSuccessListener { document ->
                     if (document.exists()) {
@@ -144,7 +144,7 @@ fun UserProfileScreen() {
     // Function to handle saving the user data to Firestore.
     fun saveUserData() {
         if (currentUser != null) {
-            val userRef = firestore.collection("users").document(currentUser.uid)
+            val userRef = firestore.collection("Users").document(currentUser.uid)
 
             // Prepare the data to be updated.
             val updates = hashMapOf<String, Any>(
