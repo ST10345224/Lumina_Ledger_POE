@@ -1,6 +1,5 @@
 package com.st10345224.luminaledgerpoe
 
-
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -10,43 +9,30 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.ByteArrayOutputStream
@@ -63,7 +49,7 @@ fun UserProfileScreen() {
     // Current User
     val currentUser = auth.currentUser
 
-    // State variables to hold user data.  These use remember to survive recompositions.
+    // State variables to hold user data. These use remember to survive recompositions.
     var user by remember { mutableStateOf<User?>(null) }
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -73,12 +59,19 @@ fun UserProfileScreen() {
     var loading by remember { mutableStateOf(true) }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Background image
         Image(
-            painter = painterResource(id = R.drawable.splashbackground), // Replace with your image resource
-            contentDescription = null, // Decorative image, no need for description
-            contentScale = ContentScale.Crop, // Or ContentScale.FillBounds, etc.
+            painter = painterResource(id = R.drawable.splashbackground),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
+
+        // Semi-transparent overlay to improve text readability
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color.Black.copy(alpha = 0.3f)
+        ) {}
 
         // Fetch user data from Firestore when the screen is loaded or when the user changes.
         LaunchedEffect(currentUser?.uid) {
@@ -151,7 +144,7 @@ fun UserProfileScreen() {
             if (result.resultCode == android.app.Activity.RESULT_OK && result.data != null) {
                 val imageUri = result.data?.data
                 try {
-                    // Load the image into a Bitmap.  Consider resizing here to save memory.
+                    // Load the image into a Bitmap. Consider resizing here to save memory.
                     val inputStream = imageUri?.let { context.contentResolver.openInputStream(it) }
                     profilePicBitmap = BitmapFactory.decodeStream(inputStream)
                 } catch (e: Exception) {
@@ -236,139 +229,249 @@ fun UserProfileScreen() {
         }
 
         if (loading) {
+            // Loading indicator
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                CircularProgressIndicator()
-                Text("Loading profile...")
+                CircularProgressIndicator(
+                    modifier = Modifier.size(60.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Loading profile...",
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp
+                )
             }
         } else {
+            // Main profile content
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()), // Make the column scrollable
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Profile Picture
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Profile Header with title
+                Text(
+                    "User Profile",
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Profile Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(8.dp, RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                    )
                 ) {
-                    if (profilePicBitmap != null) {
-                        Image(
-                            bitmap = profilePicBitmap!!.asImageBitmap(),
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground), //changed to ic_launcher_foreground,
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                    if (isEditing) {
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Button(onClick = {
-                            // Launch gallery to select a new profile picture.
-                            val intent = Intent(
-                                Intent.ACTION_PICK,
-                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                            )
-                            galleryLauncher.launch(intent)
-                        }) {
-                            Text("Change Picture")
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // First Name
-                OutlinedTextField(
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    label = { Text("First Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = isEditing,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next
-                    ),
-                    singleLine = true
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Last Name
-                OutlinedTextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    label = { Text("Last Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = isEditing,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next
-                    ),
-                    singleLine = true
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Email
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = false, // Email is not editable here,  //make email uneditable
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Done
-                    ),
-                    singleLine = true
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // enable Edit/Save Button
-                if (isEditing) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Button(onClick = {
-                            // Save the changes
-                            saveUserData()
-                        }) {
-                            Text("Save")
+                        // Profile Picture Section
+                        Box(
+                            modifier = Modifier
+                                .padding(bottom = 20.dp)
+                                .size(140.dp)
+                        ) {
+                            // Profile picture with border
+                            Surface(
+                                modifier = Modifier
+                                    .size(140.dp)
+                                    .clip(CircleShape)
+                                    .shadow(6.dp, CircleShape),
+                                shape = CircleShape,
+                                border = BorderStroke(4.dp, MaterialTheme.colorScheme.primary)
+                            ) {
+                                if (profilePicBitmap != null) {
+                                    Image(
+                                        bitmap = profilePicBitmap!!.asImageBitmap(),
+                                        contentDescription = "Profile Picture",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                } else {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                                        contentDescription = "Profile Picture",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+
+                            // Change picture button floating at the bottom right of the profile pic
+                            if (isEditing) {
+                                FloatingActionButton(
+                                    onClick = {
+                                        val intent = Intent(
+                                            Intent.ACTION_PICK,
+                                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                                        )
+                                        galleryLauncher.launch(intent)
+                                    },
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .align(Alignment.BottomEnd),
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                ) {
+                                    Text("+", fontSize = 24.sp)
+                                }
+                            }
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        OutlinedButton(onClick = {
-                            // Cancel editing, revert to original data.
-                            isEditing = false
-                            firstName = user?.firstName ?: ""
-                            lastName = user?.lastName ?: ""
-                            email = user?.email ?: ""
-                            profilePicBitmap = null // Clear the selected image.
-                        }) {
-                            Text("Cancel")
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // User information fields
+                        OutlinedTextField(
+                            value = firstName,
+                            onValueChange = { firstName = it },
+                            label = { Text("First Name") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            enabled = isEditing,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next
+                            ),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = lastName,
+                            onValueChange = { lastName = it },
+                            label = { Text("Last Name") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            enabled = isEditing,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next
+                            ),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text("Email") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            enabled = false,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Done
+                            ),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Buttons section
+                        if (isEditing) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                // Cancel button
+                                OutlinedButton(
+                                    onClick = {
+                                        // Cancel editing, revert to original data
+                                        isEditing = false
+                                        firstName = user?.firstName ?: ""
+                                        lastName = user?.lastName ?: ""
+                                        email = user?.email ?: ""
+                                        profilePicBitmap = null // Clear the selected image
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                                ) {
+                                    Text(
+                                        "Cancel",
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+
+                                // Save button
+                                Button(
+                                    onClick = {
+                                        // Save the changes
+                                        saveUserData()
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    )
+                                ) {
+                                    Text(
+                                        "Save",
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        } else {
+                            // Edit profile button
+                            Button(
+                                onClick = {
+                                    // Enter edit mode
+                                    isEditing = true
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Text(
+                                    "Edit Profile",
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 16.sp
+                                )
+                            }
                         }
-                    }
-                } else {
-                    Button(onClick = {
-                        // Enter edit mode
-                        isEditing = true
-                    }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Edit Profile")
                     }
                 }
             }
