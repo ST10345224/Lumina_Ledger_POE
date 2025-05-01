@@ -22,7 +22,7 @@ Lumina Ledger helps you track your spending, plan budgets, and set long‑term f
 ### 📸Screenshots
 
 #### Login
-![Screenshot_20250501_171726_LuminaLedgerPOE](https://github.com/user-attachments/assets/7e779191-0571-489d-9dac-081c56e145a9)
+![Screenshot_20250501_171726_LuminaLedgerPOE](https://github.com/user-attachments/assets/964d3d1e-adde-4d54-94fa-a43d26470f2f)
 
 
 #### Register
