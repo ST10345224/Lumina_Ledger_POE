@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -38,7 +39,11 @@ fun HomeScreen() {
     val goals = remember { mutableStateListOf<Goal>() }
     // Coroutine scope for asynchronous operations
     val coroutineScope = rememberCoroutineScope()
+    // Instance of Firebase Authentication
+    val auth = FirebaseAuth.getInstance()
     // Instance of Firebase Firestore
+    // Get the current user's ID, or an empty string if no user is logged in
+    val userId = auth.currentUser?.uid ?: ""
     val firestore = FirebaseFirestore.getInstance()
     // State to track the loading state of data fetching
     val loading = remember { mutableStateOf(true) }
@@ -90,7 +95,8 @@ fun HomeScreen() {
                         } catch (e: Exception) {
                             null
                         }
-                    }.filter {
+                    }.filter { it.UserID == userId } // Filter expenses by user ID
+                        .filter {
                         // Filter expenses to include only those from the current year and month
                         val expenseYearMonth = LocalDateTime.ofInstant(
                             it.Date.toDate().toInstant(), ZoneId.systemDefault()
@@ -121,9 +127,11 @@ fun HomeScreen() {
                         Goal(
                             yearMonth = yearMonth,
                             minimumSpendingGoal = doc.getDouble("minimumSpendingGoal"),
-                            maximumSpendingGoal = doc.getDouble("maximumSpendingGoal")
+                            maximumSpendingGoal = doc.getDouble("maximumSpendingGoal"),
+                            userID = doc.getString("userId") ?: ""
+
                         )
-                    }
+                    }.filter { it.userID == userId } // Filter goals by user ID
                     // Clear the existing goals and add the fetched ones
                     goals.clear()
                     goals.addAll(fetchedGoals)

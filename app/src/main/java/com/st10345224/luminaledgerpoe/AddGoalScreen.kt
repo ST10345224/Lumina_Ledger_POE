@@ -30,6 +30,7 @@ import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
 import java.util.Calendar
 
@@ -41,6 +42,11 @@ fun AddGoalScreen(onGoalAdded: () -> Unit) {
     var minimumSpendingGoal by rememberSaveable { mutableStateOf("") }
     var maximumSpendingGoal by rememberSaveable { mutableStateOf("") }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
+
+    // Instance of Firebase Authentication
+    val auth = FirebaseAuth.getInstance()
+    // Get the current user's ID, or an empty string if no user is logged in
+    val userId = auth.currentUser?.uid ?: ""
 
     // Coroutine scope for asynchronous operations
     val coroutineScope = rememberCoroutineScope()
@@ -66,6 +72,8 @@ fun AddGoalScreen(onGoalAdded: () -> Unit) {
             coroutineScope.launch {
                 // Create a HashMap to store the goal data
                 val goalData = hashMapOf(
+                    // Store the userId
+                    "userId" to userId,
                     // Format the YearMonth to a String for storage
                     "yearMonth" to yearMonth.format(
                         DateTimeFormatter.ofPattern(

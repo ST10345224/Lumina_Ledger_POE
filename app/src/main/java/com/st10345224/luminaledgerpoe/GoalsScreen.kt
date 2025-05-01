@@ -47,6 +47,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -64,9 +66,15 @@ fun convertTimestampToYearMonth(timestamp: Timestamp): YearMonth {
     return YearMonth.from(localDateTime)
 }
 
+// Instance of Firebase Authentication
+val auth = FirebaseAuth.getInstance()
+// Get the current user's ID, or an empty string if no user is logged in
+val userId = auth.currentUser?.uid ?: ""
+
 // Function to calculate total expenses for a given month.
 fun calculateExpensesForMonth(expenses: List<Expense>, yearMonth: YearMonth): Double {
-    return expenses.filter { convertTimestampToYearMonth(it.Date) == yearMonth }.sumOf { it.exAmount }
+    return expenses.filter { convertTimestampToYearMonth(it.Date) == yearMonth }
+        .sumOf { it.exAmount }
 }
 
 @Composable
@@ -81,6 +89,8 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
     val loading = remember { mutableStateOf(true) }
     // State to hold any error messages during data fetching
     val error = remember { mutableStateOf<String?>(null) }
+    // Firestore instance
+    val firestore = com.google.firebase.Firebase.firestore
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Background with slight overlay for better readability
@@ -113,10 +123,15 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
                                 yearMonth = if (yearMonthString.isNotEmpty()) {
                                     YearMonth.parse(
                                         yearMonthString,
-                                        DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
+                                        DateTimeFormatter.ofPattern(
+                                            "MMMM yyyy",
+                                            Locale.getDefault()
+                                        )
+                                    )
                                 } else YearMonth.now(),
                                 minimumSpendingGoal = document.getDouble("minimumSpendingGoal"),
-                                maximumSpendingGoal = document.getDouble("maximumSpendingGoal")
+                                maximumSpendingGoal = document.getDouble("maximumSpendingGoal"),
+                                userID = document.getString("userId") ?: ""
                             )
                         } catch (e: Exception) {
                             // Handle potential errors during goal parsing
@@ -131,20 +146,23 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
                         try {
                             Expense(
                                 exID = document.getString("exID") ?: "",
-                                UserID = document.getString("UserID") ?: "",
-                                Category = document.getString("Category") ?: "",
+                                UserID = document.getString("userID") ?: "",
+                                Category = document.getString("category") ?: "",
                                 exAmount = document.getDouble("exAmount") ?: 0.0,
                                 // Get Date as Timestamp, default to now if null
-                                Date = document.get("Date", Timestamp::class.java) ?: Timestamp.now(),
+                                Date = document.get("date", Timestamp::class.java)
+                                    ?: Timestamp.now(),
                                 exDescription = document.getString("exDescription") ?: "",
                                 exPhotoString = document.getString("exPhotoString") ?: "",
-                                Currency = document.getString("Currency") ?: "",
+                                Currency = document.getString("currency") ?: "",
                                 exTitle = document.getString("exTitle") ?: ""
                             )
                         } catch (e: Exception) {
                             // Handle potential errors during expense parsing
                             null
                         }
+
+
                     })
 
                     loading.value = false // Data fetching successful
@@ -175,6 +193,7 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
                     )
                 }
             }
+
             error.value != null -> {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -197,18 +216,23 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
                     )
                 }
             }
+
             else -> {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
+                    // Filter goals by current user into filteredGoals
+                    val filteredGoals = goals.filter { it.userID == userId }
+                    // Filter expenses by current user into filteredExpenses
+                    val filteredExpenses = expenses.filter { it.UserID == userId }
                     // Sort goals chronologically
-                    items(goals.sortedBy { it.yearMonth }) { goal ->
+                    items(filteredGoals.sortedBy { it.yearMonth }) { goal ->
                         AnimatedGoalCard(
                             goal = goal,
                             // Group expenses by month for each goal
-                            monthlyExpenses = expenses.groupBy { convertTimestampToYearMonth(it.Date) },
+                            monthlyExpenses = filteredExpenses.groupBy { convertTimestampToYearMonth(it.Date) },
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
