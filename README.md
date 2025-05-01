@@ -2,8 +2,6 @@
 
 _A simplistic yet powerful Android app for managing personal expenses and financial goals._
 
-![luminaledgerlogo](https://github.com/user-attachments/assets/b8ff03b2-ea75-433f-a80b-0a12114dd1a1)
-
 --- 
 
 ### What is Lumina Ledger?
