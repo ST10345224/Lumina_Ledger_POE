@@ -3,6 +3,7 @@ package com.st10345224.luminaledgerpoe
 import android.annotation.SuppressLint
 import android.graphics.BitmapFactory
 import android.util.Base64
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -116,6 +117,7 @@ fun LedgerScreen() {
 
     // Suspend function to fetch expenses from Firestore for the selected year and month
     suspend fun fetchExpenses(yearMonth: YearMonth) {
+        Log.d("fetchExpenses", "Fetching expenses for yearMonth: $yearMonth")
         loading.value = true
         try {
             val snapshot = firestore.collection("Expenses").get().await()
@@ -126,7 +128,7 @@ fun LedgerScreen() {
                         UserID = it.getString("userID") ?: "",
                         Category = it.getString("category") ?: "Uncategorized",
                         exAmount = it.getDouble("exAmount") ?: 0.0,
-                        Date = it.get("Date", Timestamp::class.java) ?: Timestamp.now(),
+                        Date = it.get("date", Timestamp::class.java) ?: Timestamp.now(),
                         exDescription = it.getString("exDescription") ?: "",
                         exPhotoString = it.getString("exPhotoString") ?: "",
                         Currency = it.getString("currency") ?: "ZAR",
@@ -138,11 +140,21 @@ fun LedgerScreen() {
             }
 
             // Filter expenses to only include those from the selected year and month
-            val filtered = allExpenses.filter {
-                YearMonth.from(
-                    LocalDateTime.ofInstant(it.Date.toDate().toInstant(), ZoneId.systemDefault())
-                ) == yearMonth
+//            val filtered = allExpenses.filter {
+//                YearMonth.from(
+//                    LocalDateTime.ofInstant(it.Date.toDate().toInstant(), ZoneId.systemDefault())
+//                ) == yearMonth
+//            }
+
+            // Debugging: Filter expenses to only include those from the selected year and month
+            val filtered = allExpenses.filter { expense ->
+                val expenseYearMonth = YearMonth.from(
+                    LocalDateTime.ofInstant(expense.Date.toDate().toInstant(), ZoneId.systemDefault())
+                )
+                Log.d("FilterComparison", "Expense YearMonth: $expenseYearMonth, Target YearMonth: $yearMonth, Match: ${expenseYearMonth == yearMonth}")
+                expenseYearMonth == yearMonth
             }
+
             expenses.clear()
             expenses.addAll(filtered)
             loading.value = false

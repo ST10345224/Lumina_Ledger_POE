@@ -81,7 +81,7 @@ fun HomeScreen() {
                                 UserID = doc.getString("userID") ?: "",
                                 Category = doc.getString("category") ?: "",
                                 exAmount = doc.getDouble("exAmount") ?: 0.0,
-                                Date = doc.get("Date", Timestamp::class.java) ?: Timestamp.now(),
+                                Date = doc.get("date", Timestamp::class.java) ?: Timestamp.now(),
                                 exDescription = doc.getString("exDescription") ?: "",
                                 exPhotoString = doc.getString("exPhotoString") ?: "",
                                 Currency = doc.getString("currency") ?: "",
@@ -284,13 +284,13 @@ fun ExpenseDonutChart(
     val categoryColors = remember {
         mutableMapOf(
             "Food" to Color(0xFFE57373),
-            "Housing" to Color(0xFFF06292),
-            "Transport" to Color(0xFFBA68C8),
-            "Entertainment" to Color(0xFF9575CD),
-            "Utilities" to Color(0xFF7986CB),
-            "Healthcare" to Color(0xFF64B5F6),
-            "Personal" to Color(0xFF4FC3F7),
-            "Business" to Color(0xFF4DD0E1)
+//            "Housing" to Color(0xFFF06292),
+//            "Transport" to Color(0xFFBA68C8),
+//            "Entertainment" to Color(0xFF9575CD),
+//            "Utilities" to Color(0xFF7986CB),
+//            "Healthcare" to Color(0xFF64B5F6),
+//            "Personal" to Color(0xFF4FC3F7),
+//            "Business" to Color(0xFF4DD0E1)
         )
     }
 
