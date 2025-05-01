@@ -1,45 +1,33 @@
 package com.st10345224.luminaledgerpoe
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import com.google.firebase.firestore.FirebaseFirestore
+import androidx.compose.ui.unit.dp
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import androidx.compose.foundation.Canvas
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.tooling.preview.Preview
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-
 
 @Composable
 fun HomeScreen() {
@@ -49,68 +37,73 @@ fun HomeScreen() {
     val firestore = FirebaseFirestore.getInstance()
     val loading = remember { mutableStateOf(true) }
     val error = remember { mutableStateOf<String?>(null) }
+    val selectedCurrency = remember { mutableStateOf("ZAR") }
+    val scrollState = rememberScrollState() // Remember the scroll state
+
+    // Currency conversion rates from ZAR to others (for demo)
+    val exchangeRates = mapOf(
+        "ZAR" to 1.0,
+        "USD" to 0.055,
+        "EUR" to 0.051
+    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.splashbackground), // Replace with your image resource
-            contentDescription = null, // Decorative image, no need for description
-            contentScale = ContentScale.Crop, // Or ContentScale.FillBounds, etc.
+            painter = painterResource(id = R.drawable.splashbackground),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
 
-        // Fetch data from Firestore
-        LaunchedEffect(coroutineScope) {
+        LaunchedEffect(Unit) {
             coroutineScope.launch {
                 try {
-                    // Fetch Expenses for the current month
                     val currentYearMonth = YearMonth.now()
                     val expensesSnapshot = firestore.collection("Expenses").get().await()
-                    val fetchedExpenses = expensesSnapshot.documents.map { document ->
-                        Expense(
-                            exID = document.getString("exID") ?: "",
-                            UserID = document.getString("userID") ?: "",
-                            Category = document.getString("category") ?: "",
-                            exAmount = document.getDouble("exAmount") ?: 0.0,
-                            Date = document.get("Date", Timestamp::class.java) ?: Timestamp.now(),
-                            exDescription = document.getString("exDescription") ?: "",
-                            exPhotoString = document.getString("exPhotoString") ?: "",
-                            Currency = document.getString("currency") ?: "",
-                            exTitle = document.getString("exTitle") ?: ""
-                        )
-                    }.filter { // Filter expenses for the current month
-                        val expenseYearMonth =
-                            LocalDateTime.ofInstant(
-                                it.Date.toDate().toInstant(),
-                                ZoneId.systemDefault()
+                    val fetchedExpenses = expensesSnapshot.documents.mapNotNull { doc ->
+                        try {
+                            Expense(
+                                exID = doc.getString("exID") ?: "",
+                                UserID = doc.getString("userID") ?: "",
+                                Category = doc.getString("category") ?: "",
+                                exAmount = doc.getDouble("exAmount") ?: 0.0,
+                                Date = doc.get("Date", Timestamp::class.java) ?: Timestamp.now(),
+                                exDescription = doc.getString("exDescription") ?: "",
+                                exPhotoString = doc.getString("exPhotoString") ?: "",
+                                Currency = doc.getString("currency") ?: "",
+                                exTitle = doc.getString("exTitle") ?: ""
                             )
-                                .toLocalDate()
-                                .let { YearMonth.from(it) }
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }.filter {
+                        val expenseYearMonth = LocalDateTime.ofInstant(
+                            it.Date.toDate().toInstant(), ZoneId.systemDefault()
+                        ).toLocalDate().let { date -> YearMonth.from(date) }
                         expenseYearMonth == currentYearMonth
                     }
                     expenses.clear()
                     expenses.addAll(fetchedExpenses)
 
-                    // Fetch Goals
                     val goalsSnapshot = firestore.collection("Goals").get().await()
-                    val fetchedGoals = goalsSnapshot.documents.map { document ->
-                        val yearMonthString = document.getString("yearMonth") ?: ""
+                    val fetchedGoals = goalsSnapshot.documents.mapNotNull { doc ->
+                        val yearMonthString = doc.getString("yearMonth") ?: ""
                         val yearMonth = try {
                             if (yearMonthString.isNotEmpty()) {
                                 YearMonth.parse(
                                     yearMonthString,
-                                    DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+                                    DateTimeFormatter.ofPattern(buildString {
+                                        append("MMMMisPartOfTheYear")
+                                    }, Locale.getDefault())
                                 )
-                            } else {
-                                YearMonth.now()
-                            }
+                            } else YearMonth.now()
                         } catch (e: Exception) {
-                            println("Error parsing yearMonth: $yearMonthString. Using current month. Error: ${e.message}")
                             YearMonth.now()
                         }
                         Goal(
                             yearMonth = yearMonth,
-                            minimumSpendingGoal = document.getDouble("minimumSpendingGoal"),
-                            maximumSpendingGoal = document.getDouble("maximumSpendingGoal")
+                            minimumSpendingGoal = doc.getDouble("minimumSpendingGoal"),
+                            maximumSpendingGoal = doc.getDouble("maximumSpendingGoal")
                         )
                     }
                     goals.clear()
@@ -124,64 +117,116 @@ fun HomeScreen() {
             }
         }
 
-        // Show loading indicator
-        if (loading.value) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(text = "Loading data...")
-            }
-        } else if (error.value != null) {
-            // Show error message
-            Text(text = "Error: ${error.value}")
-        } else {
-            // Display content
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Donut Chart Card
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        when {
+            loading.value -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Monthly Expenses",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        ExpenseDonutChart(expenses = expenses)
-                    }
+                    Text(text = "Loading data...")
                 }
-
-                // Goals Progress Card
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            }
+            error.value != null -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Goals",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        if (goals.isNotEmpty()) {
-                            goals.forEach { goal ->
-                                GoalProgressBar(goal = goal, expenses = expenses)
+                    Text(text = "Error: ${error.value}")
+                }
+            }
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                        .verticalScroll(scrollState), // Apply vertical scroll to the entire screen
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // 🔻 Currency selector dropdown
+                    var expanded by remember { mutableStateOf(false) }
+                    Box {
+                        Button(onClick = { expanded = true }) {
+                            Text("Currency: ${selectedCurrency.value}")
+                        }
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            listOf("ZAR", "USD", "EUR").forEach { currency ->
+                                DropdownMenuItem(
+                                    text = { Text(currency) },
+                                    onClick = {
+                                        selectedCurrency.value = currency
+                                        expanded = false
+                                    }
+                                )
                             }
-                        } else {
-                            Text(text = "No goals set for this month.")
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 🔁 Expense donut and goal cards
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Monthly Expenses",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            ExpenseDonutChart(
+                                expenses = expenses,
+                                selectedCurrency = selectedCurrency.value,
+                                exchangeRates = exchangeRates
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .height(300.dp),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxSize()
+                        ) {
+                            Text(
+                                text = "Goals",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 16.dp)  // Increased bottom padding
+                            )
+                            if (goals.isNotEmpty()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .verticalScroll(rememberScrollState()),
+                                    verticalArrangement = Arrangement.spacedBy(24.dp)  // Add space between items
+                                ) {
+                                    goals.forEach { goal ->
+                                        GoalProgressBar(
+                                            goal = goal,
+                                            expenses = expenses,
+                                            selectedCurrency = selectedCurrency.value,
+                                            exchangeRates = exchangeRates
+                                        )
+                                    }
+                                }
+                            } else {
+                                Text(text = "No goals set for this month.")
+                            }
                         }
                     }
                 }
@@ -191,138 +236,129 @@ fun HomeScreen() {
 }
 
 @Composable
-fun ExpenseDonutChart(expenses: List<Expense>) {
-    // Calculate total expenses and expenses per category
-    val totalExpenses = expenses.sumOf { it.exAmount }
-    val expensesByCategory = expenses.groupBy { it.Category }.mapValues { (_, expenses) ->
-        expenses.sumOf { it.exAmount }
-    }
+fun ExpenseDonutChart(
+    expenses: List<Expense>,
+    selectedCurrency: String,
+    exchangeRates: Map<String, Double>
+) {
+    val totalExpensesZAR = expenses.sumOf { it.exAmount }
+    val rate = exchangeRates[selectedCurrency] ?: 1.0
+    val totalExpenses = totalExpensesZAR * rate
 
-    // Define colors for categories (you can expand this as needed)
+    val expensesByCategory = expenses.groupBy { it.Category }.mapValues { it.value.sumOf { ex -> ex.exAmount } }
     val categoryColors = mapOf(
-        "Food" to Color(0xFFE57373),       // Red
-        "Housing" to Color(0xFFF06292),    // Pink
-        "Transport" to Color(0xFFBA68C8),  // Purple
-        "Entertainment" to Color(0xFF9575CD), // Deep Purple
-        "Utilities" to Color(0xFF7986CB),  // Indigo
-        "Healthcare" to Color(0xFF64B5F6), // Blue
-        "Personal" to Color(0xFF4FC3F7),    // Light Blue
-        "Business" to Color(0xFF4DD0E1)      // Cyan
+        "Food" to Color(0xFFE57373),
+        "Housing" to Color(0xFFF06292),
+        "Transport" to Color(0xFFBA68C8),
+        "Entertainment" to Color(0xFF9575CD),
+        "Utilities" to Color(0xFF7986CB),
+        "Healthcare" to Color(0xFF64B5F6),
+        "Personal" to Color(0xFF4FC3F7),
+        "Business" to Color(0xFF4DD0E1)
     )
 
-    // Ensure that the colors list matches the number of categories
-    val colorList = expensesByCategory.keys.map { category ->
-        categoryColors[category] ?: Color.Gray // Default color if category not found
-    }
-    val categoryNameList = expensesByCategory.keys.toList()
+    val percentages = expensesByCategory.mapValues { it.value.toFloat() / totalExpensesZAR.toFloat() }
+    val colorList = expensesByCategory.keys.map { categoryColors[it] ?: Color.Gray }
 
-
-    // Calculate percentages for each category
-    val percentages = expensesByCategory.mapValues { (_, amount) ->
-        (amount / totalExpenses).toFloat()
-    }
     var startAngle = 0f
-    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
 
+    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(modifier = Modifier.size(200.dp), contentAlignment = Alignment.Center) {
             Canvas(modifier = Modifier.size(200.dp)) {
-                percentages.forEach { (category, percentage) ->
-                    val angle = percentage * 360f
-                    val color = categoryColors[category] ?: Color.Gray
+                percentages.forEach { (category, percent) ->
+                    val angle = percent * 360f
                     drawArc(
-                        color = color,
+                        color = categoryColors[category] ?: Color.Gray,
                         startAngle = startAngle,
                         sweepAngle = angle,
-                        useCenter = false, //  Do not connect to the center
+                        useCenter = false,
                         style = Stroke(width = 80f, cap = StrokeCap.Butt)
                     )
                     startAngle += angle
                 }
             }
-
         }
-        // Add a legend
-        Column(modifier = Modifier.padding(top = 16.dp)) { // Added padding here
-            categoryNameList.forEachIndexed { index, categoryName ->
+
+        Column(modifier = Modifier.padding(top = 16.dp)) {
+            expensesByCategory.keys.forEachIndexed { index, category ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Canvas(modifier = Modifier.size(16.dp)) {
                         drawCircle(color = colorList[index])
                     }
                     Text(
-                        categoryName,
+                        text = category,
                         modifier = Modifier.padding(start = 4.dp),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
             Text(
-                "Total: ${expenses.firstOrNull()?.Currency ?: "ZAR"} ${
-                    String.format(
-                        "%.2f",
-                        totalExpenses
-                    )
-                }",
+                text = "Total: $selectedCurrency ${String.format("%.2f", totalExpenses)}",
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
     }
 }
 
 @Composable
-fun GoalProgressBar(goal: Goal, expenses: List<Expense>) {
+fun GoalProgressBar(
+    goal: Goal,
+    expenses: List<Expense>,
+    selectedCurrency: String,
+    exchangeRates: Map<String, Double>
+) {
+    val rate = exchangeRates[selectedCurrency] ?: 1.0
+
     val monthlyExpenses = expenses.filter {
-        LocalDateTime.ofInstant(it.Date.toDate().toInstant(), ZoneId.systemDefault())
-            .toLocalDate()
-            .let { YearMonth.from(it) } == goal.yearMonth
-    }.sumOf { it.exAmount }
+        YearMonth.from(
+            LocalDateTime.ofInstant(it.Date.toDate().toInstant(), ZoneId.systemDefault()).toLocalDate()
+        ) == goal.yearMonth
+    }.sumOf { it.exAmount } * rate
 
-    val maxGoal = goal.maximumSpendingGoal ?: 0.0
-    val progress = if (maxGoal > 0) (monthlyExpenses / maxGoal).coerceIn(0.0, 1.0) else 0.0f
+    val maxGoal = (goal.maximumSpendingGoal ?: 0.0) * rate
+    val progress = if (maxGoal > 0) (monthlyExpenses / maxGoal).coerceIn(0.0, 1.0) else 0.0
 
-    // Animate the progress
     val animatedProgress by animateFloatAsState(
         targetValue = progress.toFloat(),
-        animationSpec = tween(durationMillis = 1000) // You can adjust the duration
+        animationSpec = tween(1000)
     )
 
-    Column(modifier = Modifier.padding(8.dp)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Goal for ${goal.yearMonth.format(DateTimeFormatter.ofPattern("MMMM", Locale.getDefault()))}",
             style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp)  // Added bottom padding
         )
-        Spacer(modifier = Modifier.height(4.dp))
+
+        Spacer(modifier = Modifier.height(8.dp))  // Increased spacing
+
         LinearProgressIndicator(
-            progress = animatedProgress,
-            modifier = Modifier.fillMaxWidth(),
-            color = if (monthlyExpenses > (goal.maximumSpendingGoal ?: Double.MAX_VALUE)) Color.Red else MaterialTheme.colorScheme.primary,
+            progress = { animatedProgress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp),  // Made progress bar taller
+            color = if (monthlyExpenses > maxGoal) Color.Red else MaterialTheme.colorScheme.primary,
+
         )
+
+        Spacer(modifier = Modifier.height(8.dp))  // Added spacing after progress bar
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically  // Align text vertically
         ) {
             Text(
-                text = "Spent: ${expenses.firstOrNull()?.Currency ?: "ZAR"} ${
-                    String.format(
-                        "%.2f",
-                        monthlyExpenses
-                    )
-                }",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface
+                "Spent: ${String.format("%.2f", monthlyExpenses)} $selectedCurrency",
+                style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Max: ${expenses.firstOrNull()?.Currency ?: "ZAR"} ${
-                    String.format(
-                        "%.2f",
-                        goal.maximumSpendingGoal ?: 0.0
-                    )
-                }",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface
+                "Limit: ${String.format("%.2f", maxGoal)} $selectedCurrency",
+                style = MaterialTheme.typography.bodyMedium
             )
         }
     }
 }
-

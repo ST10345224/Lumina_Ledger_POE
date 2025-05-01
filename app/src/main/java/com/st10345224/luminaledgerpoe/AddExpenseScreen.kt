@@ -255,8 +255,8 @@ fun AddExpenseScreen(onExpenseAdded: (Expense) -> Unit) {
                     val amount = expenseAmount.toDoubleOrNull()
                     if (expenseTitle.isNotBlank() && expenseCategory.isNotBlank() && amount != null) {
                         val base64Image = imageBitmap?.let {
-                            val compressedBytes = compressBitmap(it)
-                            encodeToBase64(compressedBytes)
+                            val compressedBytes = compressBitmap(it) // Assuming this function exists
+                            encodeToBase64(compressedBytes)         // Assuming this function exists
                         } ?: ""
                         val exId = UUID.randomUUID().toString()
                         val currentDate = Date() // Get the current date and time
@@ -332,10 +332,6 @@ fun CategoryDropdown(
             onClick = { expanded = true },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFADA1A1),
-                contentColor = Color.Black
-            ),
         ) {
             Text(if (selectedCategory.isNotEmpty()) selectedCategory else "Select Category")
         }
@@ -371,10 +367,6 @@ fun CurrencyDropdown(
             onClick = { expanded = true },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFADA1A1),
-                contentColor = Color.Black
-            ),
         ) {
             Text(selectedCurrency)
         }
