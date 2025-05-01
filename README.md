@@ -5,7 +5,7 @@ _A simplistic yet powerful Android app for managing personal expenses and financ
 --- 
 
 ### What is Lumina Ledger?
-Lumina Ledger helps you track your spending, plan budgets, and set long‑term financial goals all in one place. With a clean interface and intuitive controls, you can easily log expenses, categorize transactions, and monitor progress towards savings targets.
+Lumina Ledger helps you track your spending, plan budgets, and set long‑term financial goals all in one place. With a clean interface and intuitive controls, you can easily log expenses, categorize them, and monitor progress towards savings targets.
 
 ---
 
