@@ -2,7 +2,7 @@
 
 _A simplistic yet powerful Android app for managing personal expenses and financial goals._
 
-![resized_for_github_luminaledgerlogo](https://github.com/user-attachments/assets/6a90a0ac-acf8-408e-ad9f-ff0d39e75710)
+![resized_for_github_luminaledgerlogo](https://github.com/user-attachments/assets/2a2312e3-fc72-4c5a-bbf3-4daeca52f441)
 
 --- 
 
