@@ -2,6 +2,9 @@
 
 _A simplistic yet powerful Android app for managing personal expenses and financial goals._
 
+![resized_for_github_luminaledgerlogo](https://github.com/user-attachments/assets/3036f390-c74e-4a86-b661-e885643f1c50)
+
+
 --- 
 
 ### What is Lumina Ledger?
@@ -26,29 +29,30 @@ Lumina Ledger helps you track your spending, plan budgets, and set long‑term f
 
 
 #### Register
-![Screenshot_20250501_171732_LuminaLedgerPOE](https://github.com/user-attachments/assets/db174f47-12a2-46b3-9a4b-56a2a1d4b9cb)
+![Screenshot_20250501_171732_LuminaLedgerPOE](https://github.com/user-attachments/assets/bfa13e79-68ea-4363-abe5-3468bcc80db9)
 
 
 #### Detailed Dashboard
-![Screenshot_20250501_171833_LuminaLedgerPOE](https://github.com/user-attachments/assets/c96d0261-5632-4a5f-ac7a-58e73cb18103)
+![Screenshot_20250501_171833_LuminaLedgerPOE](https://github.com/user-attachments/assets/5267f945-0971-4188-8ed6-e0e8b4b58363)
 
-![Screenshot_20250501_171837_LuminaLedgerPOE](https://github.com/user-attachments/assets/34bf3b3c-e91d-44e5-a71b-f3d5a8a8a4e1)
+![Screenshot_20250501_171837_LuminaLedgerPOE](https://github.com/user-attachments/assets/0bc4a9e9-0e7e-4c2f-837e-0babb26c9619)
 
 
 #### Ledger View
-![Screenshot_20250501_171851_LuminaLedgerPOE](https://github.com/user-attachments/assets/c0d4082b-8606-433b-9280-b183171a6237)
+![Screenshot_20250501_171851_LuminaLedgerPOE](https://github.com/user-attachments/assets/12935e44-002b-4c1d-8f85-2406e80983ad)
 
 
 #### Goals
-![Screenshot_20250501_171856_LuminaLedgerPOE](https://github.com/user-attachments/assets/f43fff0b-f89e-4112-b654-6a1ab43619df)
+![Screenshot_20250501_171856_LuminaLedgerPOE](https://github.com/user-attachments/assets/69faab04-38e6-4a3e-a2e9-7d9d0de7fc44)
 
-![Screenshot_20250501_171915_LuminaLedgerPOE](https://github.com/user-attachments/assets/68931042-43e1-4ab5-abec-d1adaec889a9)
+![Screenshot_20250501_171915_LuminaLedgerPOE](https://github.com/user-attachments/assets/d3886cd9-138c-4803-8510-3476e5b5ecd0)
 
 
 #### New Expenses
-![Screenshot_20250501_171859_LuminaLedgerPOE](https://github.com/user-attachments/assets/d6c60479-28d8-49e5-94ea-556bf4b5ebf8)
+![Screenshot_20250501_171859_LuminaLedgerPOE](https://github.com/user-attachments/assets/771747ec-7aa8-4609-a633-d4ec2765b11f)
 
 
 #### Profile
-![Screenshot_20250501_171902_LuminaLedgerPOE](https://github.com/user-attachments/assets/ca1a39d2-cfc7-4c89-ad8e-f3d8b368581e)
+![Screenshot_20250501_171902_LuminaLedgerPOE](https://github.com/user-attachments/assets/185b3b96-08ad-4f3b-af22-28c181a9f8b9)
+
 
