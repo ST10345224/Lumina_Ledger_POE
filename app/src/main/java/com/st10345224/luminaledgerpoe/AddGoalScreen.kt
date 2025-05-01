@@ -42,73 +42,91 @@ fun AddGoalScreen(onGoalAdded: () -> Unit) {
     var maximumSpendingGoal by rememberSaveable { mutableStateOf("") }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
 
+    // Coroutine scope for asynchronous operations
     val coroutineScope = rememberCoroutineScope()
+    // Instance of Firebase Firestore
     val firestore = Firebase.firestore
 
-    // Date Picker State
+    // Date Picker State for selecting the year and month
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = Instant.now().toEpochMilli(),
-        yearRange = 2020..2030 // Example year range
+        yearRange = 2020..2030 // Example year range for the date picker
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Background image
         Image(
             painter = painterResource(id = R.drawable.splashbackground), // Replace with your image resource
             contentDescription = null, // Decorative image, no need for description
             contentScale = ContentScale.Crop, // Or ContentScale.FillBounds, etc.
             modifier = Modifier.fillMaxSize()
         )
-        // Function to handle saving the goal to Firestore
+        // Function to handle saving the goal data to Firestore
         fun saveGoal() {
             coroutineScope.launch {
+                // Create a HashMap to store the goal data
                 val goalData = hashMapOf(
+                    // Format the YearMonth to a String for storage
                     "yearMonth" to yearMonth.format(
                         DateTimeFormatter.ofPattern(
                             "MMMM yyyy",
                             Locale.getDefault()
                         )
                     ), // Store as "Month Year"
+                    // Convert the minimum spending goal to Double if not null
                     "minimumSpendingGoal" to minimumSpendingGoal.toDoubleOrNull(),
+                    // Convert the maximum spending goal to Double if not null
                     "maximumSpendingGoal" to maximumSpendingGoal.toDoubleOrNull()
                 )
 
+                // Add a new document to the "Goals" collection with the goal data
                 firestore.collection("Goals")
                     .add(goalData)
                     .addOnSuccessListener {
-                        onGoalAdded() // Notify the parent composable
+                        // Notify the parent composable that the goal has been added successfully
+                        onGoalAdded()
                     }
                     .addOnFailureListener { e ->
-                        // Handle the error appropriately, e.g., show a Toast
+                        // Handle the error appropriately, e.g., log the error
                         println("Error adding goal: ${e.message}")
+                        // Optionally, show a user-friendly error message
                     }
             }
         }
 
-        // Show Date Picker Dialog
+        // Show Date Picker Dialog when showDatePicker is true
         if (showDatePicker) {
             DatePickerDialog(
+                // Callback when the dialog is dismissed (e.g., by pressing back)
                 onDismissRequest = { showDatePicker = false },
+                // Button to confirm the selected date
                 confirmButton = {
                     Button(onClick = {
+                        // Get the selected date in milliseconds
                         datePickerState.selectedDateMillis?.let {
+                            // Convert milliseconds to LocalDateTime
                             val selectedDate =
                                 LocalDateTime.ofInstant(
                                     Instant.ofEpochMilli(it),
                                     ZoneId.systemDefault()
                                 )
+                            // Extract YearMonth from the selected LocalDateTime
                             yearMonth = YearMonth.from(selectedDate)
                         }
+                        // Dismiss the date picker dialog
                         showDatePicker = false
                     }) {
                         Text("Confirm")
                     }
                 },
+                // Button to cancel the date selection
                 dismissButton = {
                     Button(onClick = { showDatePicker = false }) {
                         Text("Cancel")
                     }
                 }
             ) {
+                // The actual DatePicker composable
                 DatePicker(state = datePickerState)
             }
         }
@@ -121,10 +139,11 @@ fun AddGoalScreen(onGoalAdded: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // YearMonth selection using a DatePickerDialog
+            // Button to trigger the display of the DatePickerDialog
             Button(onClick = { showDatePicker = true }) {
                 Text("Select Year and Month")
             }
+            // Display the currently selected YearMonth
             Text(
                 text = "Selected Month: ${
                     yearMonth.format(
@@ -137,7 +156,7 @@ fun AddGoalScreen(onGoalAdded: () -> Unit) {
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Minimum Spending Goal Input
+            // Input field for the minimum spending goal
             OutlinedTextField(
                 value = minimumSpendingGoal,
                 onValueChange = { minimumSpendingGoal = it },
@@ -147,7 +166,7 @@ fun AddGoalScreen(onGoalAdded: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Maximum Spending Goal Input
+            // Input field for the maximum spending goal
             OutlinedTextField(
                 value = maximumSpendingGoal,
                 onValueChange = { maximumSpendingGoal = it },
@@ -157,7 +176,7 @@ fun AddGoalScreen(onGoalAdded: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Button to Save the Goal
+            // Button to save the entered goal
             Button(
                 onClick = {
                     saveGoal()

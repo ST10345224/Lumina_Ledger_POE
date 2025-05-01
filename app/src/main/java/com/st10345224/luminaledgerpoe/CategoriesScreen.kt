@@ -54,18 +54,28 @@ import kotlinx.coroutines.tasks.await
 
 @Composable
 fun CategoriesScreen() {
+    // State to hold the list of categories
     val categories = remember { mutableStateListOf<Category>() }
+    // Coroutine scope for asynchronous operations
     val coroutineScope = rememberCoroutineScope()
+    // Instance of Firebase Firestore
     val firestore = FirebaseFirestore.getInstance()
+    // State to track loading state
     val loading = remember { mutableStateOf(true) }
+    // State to hold any error messages
     val error = remember { mutableStateOf<String?>(null) }
+    // State to control the visibility of the add category dialog
     var showDialog by remember { mutableStateOf(false) }
+    // State to hold the name of the new category being added
     var newCategoryName by remember { mutableStateOf("") }
+    // State to hold the selected icon for the new category
     var selectedIcon by rememberSaveable { mutableStateOf<String?>(null) }
+    // State to control the expansion of the icon selection dropdown menu
     var isIconMenuExpanded by remember { mutableStateOf(false) }
 
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Background image
         Image(
             painter = painterResource(id = R.drawable.splashbackground),
             contentDescription = null, // Decorative image, no need for description
@@ -73,12 +83,14 @@ fun CategoriesScreen() {
             modifier = Modifier.fillMaxSize()
         )
 
-        // Fetch categories from Firestore
+        // Fetch categories from Firestore when the composable is launched
         LaunchedEffect(coroutineScope) {
             coroutineScope.launch {
                 try {
+                    // Get all documents from the "Category" collection
                     val categoriesSnapshot =
                         firestore.collection("Category").get().await() // Corrected collection name
+                    // Map each document to a Category data class
                     val fetchedCategories = categoriesSnapshot.documents.map { document ->
                         Category(
                             categoryId = document.id,
@@ -87,63 +99,69 @@ fun CategoriesScreen() {
 
                             )
                     }
+                    // Clear the existing list and add the fetched categories
                     categories.clear()
                     categories.addAll(fetchedCategories)
-                    loading.value = false
+                    loading.value = false // Indicate that loading is complete
                 } catch (e: Exception) {
-                    error.value = "Error fetching categories: ${e.message}"
-                    loading.value = false
+                    error.value = "Error fetching categories: ${e.message}" // Store the error message
+                    loading.value = false // Indicate loading failed
                 }
             }
         }
 
-        // Function to delete a category
+        // Function to delete a category by its ID
         fun deleteCategory(categoryId: String) {
             coroutineScope.launch {
                 try {
+                    // Delete the document with the given ID from the "Category" collection
                     firestore.collection("Category").document(categoryId).delete()
                         .await() // Corrected collection name
-                    // Update the list after successful deletion
+                    // Update the local list of categories after successful deletion
                     categories.removeIf { it.categoryId == categoryId }
                 } catch (e: Exception) {
-                    error.value = "Error deleting category: ${e.message}"
+                    error.value = "Error deleting category: ${e.message}" // Store the error message
                 }
             }
         }
 
-        // Function to add a new category
+        // Function to add a new category to Firestore
         fun addCategory(name: String, icon: String?) {
             coroutineScope.launch {
                 try {
-                    // Check if a category with the same name already exists
+                    // Check if a category with the same name already exists (case-insensitive)
                     val existingCategory =
                         categories.find { it.name.equals(name, ignoreCase = true) }
                     if (existingCategory != null) {
-                        error.value = "A category with this name already exists."
+                        error.value = "A category with this name already exists." // Set error if name exists
                         return@launch
                     }
 
+                    // Get a reference to a new document in the "Category" collection
                     val newCategoryRef =
                         firestore.collection("Category").document() //get document reference
+                    // Create a new Category object with the provided name and icon
                     val newCategory = Category(  //use the data class
                         categoryId = newCategoryRef.id,
                         name = name,
                         categoryIcon = icon
                     )
 
+                    // Set the data for the new document using the Category object
                     newCategoryRef.set(newCategory).await() //use set
 
+                    // Add the new category to the local list
                     categories.add(newCategory) //add to the list
                     newCategoryName = "" // Reset the input field
-                    selectedIcon = null
-                    showDialog = false
+                    selectedIcon = null // Reset the selected icon
+                    showDialog = false // Dismiss the add category dialog
                 } catch (e: Exception) {
-                    error.value = "Error adding category: ${e.message}"
+                    error.value = "Error adding category: ${e.message}" // Store the error message
                 }
             }
         }
 
-        // List of available icons
+        // List of available icons with their names and Material Icons
         val availableIcons = listOf(
             "Food" to Icons.Filled.ShoppingCart,
             "Housing" to Icons.Filled.Home,
@@ -156,7 +174,7 @@ fun CategoriesScreen() {
             "Business" to Icons.Filled.Email
         )
 
-        // Show loading indicator
+        // Show loading indicator while data is being fetched
         if (loading.value) {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -166,22 +184,24 @@ fun CategoriesScreen() {
                 Text(text = "Loading categories...")
             }
         } else if (error.value != null) {
-            // Show error message
+            // Show error message if fetching failed
             Text(text = "Error: ${error.value}")
         } else {
-            // Display the list of categories
+            // Display the list of categories in a Column
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Title of the screen
                 Text(
                     text = "Categories",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
+                // Iterate through the list of categories and display each in a Card
                 categories.forEach { category ->
                     Card(
                         modifier = Modifier
@@ -194,12 +214,15 @@ fun CategoriesScreen() {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            // Display the category name
                             Text(
                                 text = category.name,
                                 style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.weight(1f) // Add weight to the text
+                                modifier = Modifier.weight(1f) // Add weight to the text to take available space
                             )
+                            // Display the category icon if it exists
                             if (category.categoryIcon != null) {
+                                // Find the corresponding Material Icon for the category icon name
                                 val icon =
                                     availableIcons.find { it.first == category.categoryIcon }?.second
                                 if (icon != null) {
@@ -209,6 +232,7 @@ fun CategoriesScreen() {
                                     )
                                 }
                             }
+                            // Button to delete the category
                             Button(onClick = { deleteCategory(category.categoryId) }) {
                                 Text("Delete")
                             }
@@ -216,13 +240,13 @@ fun CategoriesScreen() {
                     }
                 }
 
-                // Button to add a new category
+                // Button to show the dialog for adding a new category
                 Button(onClick = { showDialog = true }, modifier = Modifier.padding(top = 16.dp)) {
                     Text("Add Category")
                 }
             }
         }
-        //dialog to add category
+        // Dialog to add a new category
         if (showDialog) {
             Dialog(onDismissRequest = { showDialog = false }) {
                 Surface(
@@ -236,44 +260,49 @@ fun CategoriesScreen() {
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Title of the dialog
                         Text(
                             text = "Add New Category",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
+                        // Text field to input the new category name
                         TextField(
                             value = newCategoryName,
                             onValueChange = { newCategoryName = it },
                             label = { androidx.compose.material3.Text("Category Name") },
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
-                        // Icon selection dropdown
+                        // Row for icon selection
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Select Icon:", style = MaterialTheme.typography.bodyMedium)
+                            // Box containing the icon selection button and dropdown
                             Box {
                                 Button(onClick = { isIconMenuExpanded = true }) {
-                                    Text(selectedIcon ?: "Select")
+                                    Text(selectedIcon ?: "Select") // Display selected icon or "Select"
                                 }
+                                // Dropdown menu to choose an icon
                                 DropdownMenu(
                                     expanded = isIconMenuExpanded,
                                     onDismissRequest = { isIconMenuExpanded = false }
                                 ) {
+                                    // Iterate through the available icons and create a DropdownMenuItem for each
                                     availableIcons.forEach { (name, icon) ->
                                         DropdownMenuItem(
                                             text = { Text(name) },
                                             onClick = {
-                                                selectedIcon = name
-                                                isIconMenuExpanded = false
+                                                selectedIcon = name // Update the selected icon
+                                                isIconMenuExpanded = false // Dismiss the dropdown
                                             },
                                             leadingIcon = {
                                                 Icon(
                                                     imageVector = icon,
-                                                    contentDescription = name
+                                                    contentDescription = name // Content description for accessibility
                                                 )
                                             }
                                         )
@@ -281,19 +310,23 @@ fun CategoriesScreen() {
                                 }
                             }
                         }
+                        // Row for action buttons (Add and Cancel)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
                         ) {
+                            // Button to add the new category
                             Button(
                                 modifier = Modifier.padding(end = 8.dp),
                                 onClick = {
+                                    // Only add the category if the name is not blank
                                     if (newCategoryName.isNotBlank()) {
                                         addCategory(newCategoryName, selectedIcon)
                                     }
                                 }) {
                                 Text("Add")
                             }
+                            // Button to cancel adding the category and dismiss the dialog
                             Button(onClick = { showDialog = false }) {
                                 Text("Cancel")
                             }

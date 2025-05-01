@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SplashScreen() {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background image with overlay for better text visibility
+        // Background image with overlay
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
                 painter = painterResource(id = R.drawable.splashbackground),
@@ -45,7 +45,7 @@ fun SplashScreen() {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.2f)))
+                    .background(Color.Black.copy(alpha = 0.2f))) // Dark overlay for text contrast
         }
 
         Column(
@@ -53,7 +53,7 @@ fun SplashScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // App logo with elegant shadow and border
+            // App logo with styling
             Box(
                 modifier = Modifier
                     .size(200.dp)
@@ -78,7 +78,7 @@ fun SplashScreen() {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // App name with modern typography
+            // App name with styling
             Text(
                 "LUMINA LEDGER",
                 style = MaterialTheme.typography.displaySmall.copy(
@@ -96,7 +96,7 @@ fun SplashScreen() {
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Loading indicator with animation
+            // Loading indicator
             CircularProgressIndicator(
                 modifier = Modifier.size(40.dp),
                 color = Color.White,
@@ -105,7 +105,7 @@ fun SplashScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Loading text with subtle animation
+            // Loading text
             Text(
                 "Loading...",
                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -122,6 +122,8 @@ fun SplashScreen() {
         }
     }
 }
+
+// Preview the SplashScreen
 @Preview
 @Composable
 fun SplashScreenPreview() {

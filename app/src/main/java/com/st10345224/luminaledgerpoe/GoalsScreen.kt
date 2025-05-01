@@ -7,50 +7,54 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ProgressIndicatorDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.graphics.lerp
-import com.google.firebase.Timestamp
-import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import java.time.ZoneId
-import java.time.LocalDateTime
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.tasks.await
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import kotlinx.coroutines.launch
-import java.lang.Exception
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 // Function to convert Timestamp to YearMonth.
 fun convertTimestampToYearMonth(timestamp: Timestamp): YearMonth {
@@ -67,10 +71,15 @@ fun calculateExpensesForMonth(expenses: List<Expense>, yearMonth: YearMonth): Do
 
 @Composable
 fun GoalsScreen(onAddGoal: () -> Unit) {
+    // Coroutine scope for asynchronous operations
     val coroutineScope = rememberCoroutineScope()
+    // State to hold the list of goals
     val goals = remember { mutableStateListOf<Goal>() }
+    // State to hold the list of expenses for calculating spending
     val expenses = remember { mutableStateListOf<Expense>() }
+    // State to track loading state
     val loading = remember { mutableStateOf(true) }
+    // State to hold any error messages during data fetching
     val error = remember { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -93,13 +102,14 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
         LaunchedEffect(Unit) {
             coroutineScope.launch {
                 try {
-                    // Fetch Goals
+                    // Fetch Goals from Firestore
                     val goalsSnapshot = Firebase.firestore.collection("Goals").get().await()
                     goals.clear()
                     goals.addAll(goalsSnapshot.documents.mapNotNull { document ->
                         try {
                             val yearMonthString = document.getString("yearMonth") ?: ""
                             Goal(
+                                // Parse yearMonth string, default to current month if empty
                                 yearMonth = if (yearMonthString.isNotEmpty()) {
                                     YearMonth.parse(
                                         yearMonthString,
@@ -109,11 +119,12 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
                                 maximumSpendingGoal = document.getDouble("maximumSpendingGoal")
                             )
                         } catch (e: Exception) {
+                            // Handle potential errors during goal parsing
                             null
                         }
                     })
 
-                    // Fetch Expenses
+                    // Fetch Expenses from Firestore
                     val expensesSnapshot = Firebase.firestore.collection("Expenses").get().await()
                     expenses.clear()
                     expenses.addAll(expensesSnapshot.documents.mapNotNull { document ->
@@ -123,6 +134,7 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
                                 UserID = document.getString("UserID") ?: "",
                                 Category = document.getString("Category") ?: "",
                                 exAmount = document.getDouble("exAmount") ?: 0.0,
+                                // Get Date as Timestamp, default to now if null
                                 Date = document.get("Date", Timestamp::class.java) ?: Timestamp.now(),
                                 exDescription = document.getString("exDescription") ?: "",
                                 exPhotoString = document.getString("exPhotoString") ?: "",
@@ -130,14 +142,15 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
                                 exTitle = document.getString("exTitle") ?: ""
                             )
                         } catch (e: Exception) {
+                            // Handle potential errors during expense parsing
                             null
                         }
                     })
 
-                    loading.value = false
+                    loading.value = false // Data fetching successful
                 } catch (e: Exception) {
-                    error.value = "Error fetching data: ${e.message}"
-                    loading.value = false
+                    error.value = "Error fetching data: ${e.message}" // Store the error message
+                    loading.value = false // Data fetching failed
                 }
             }
         }
@@ -190,15 +203,18 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
                         .fillMaxSize()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
+                    // Sort goals chronologically
                     items(goals.sortedBy { it.yearMonth }) { goal ->
                         AnimatedGoalCard(
                             goal = goal,
+                            // Group expenses by month for each goal
                             monthlyExpenses = expenses.groupBy { convertTimestampToYearMonth(it.Date) },
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
                 }
 
+                // Button to navigate to add a new goal
                 FloatingActionButton(
                     onClick = onAddGoal,
                     modifier = Modifier
@@ -224,6 +240,7 @@ fun AnimatedGoalCard(
     monthlyExpenses: Map<YearMonth, List<Expense>>,
     modifier: Modifier = Modifier
 ) {
+    // Calculate total spending for the goal's month
     val totalExpenses = remember(monthlyExpenses, goal.yearMonth) {
         calculateExpensesForMonth(monthlyExpenses[goal.yearMonth] ?: emptyList(), goal.yearMonth)
     }
@@ -231,7 +248,7 @@ fun AnimatedGoalCard(
     val maxGoal = goal.maximumSpendingGoal ?: 0.0
     val minGoal = goal.minimumSpendingGoal ?: 0.0
 
-    // Animated progress value
+    // Animated progress value towards maximum goal
     val animatedProgress by animateFloatAsState(
         targetValue = when {
             maxGoal <= 0 -> 0f
@@ -242,12 +259,12 @@ fun AnimatedGoalCard(
         label = "progressAnimation"
     )
 
-    // Color animation
+    // Animated color of the progress bar
     val progressColor by animateColorAsState(
         targetValue = when {
-            minGoal > 0 && totalExpenses < minGoal -> MaterialTheme.colorScheme.error
-            totalExpenses > maxGoal -> MaterialTheme.colorScheme.error
-            else -> MaterialTheme.colorScheme.primary
+            minGoal > 0 && totalExpenses < minGoal -> MaterialTheme.colorScheme.error // Below minimum
+            totalExpenses > maxGoal -> MaterialTheme.colorScheme.error // Exceeded maximum
+            else -> MaterialTheme.colorScheme.primary // Within or approaching maximum
         },
         animationSpec = tween(durationMillis = 1000),
         label = "colorAnimation"
@@ -261,7 +278,7 @@ fun AnimatedGoalCard(
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header with month/year
+            // Display month and year of the goal
             Text(
                 text = goal.yearMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
                 style = MaterialTheme.typography.titleLarge.copy(
@@ -271,7 +288,7 @@ fun AnimatedGoalCard(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Goals row
+            // Display minimum and maximum spending goals
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -304,9 +321,9 @@ fun AnimatedGoalCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Progress section
+            // Display current spending and progress
             Column {
-                // Current spending
+                // Text showing current spending
                 Text(
                     text = "Current Spending: ${totalExpenses.currencyFormat()}",
                     style = MaterialTheme.typography.bodyLarge,
@@ -324,7 +341,7 @@ fun AnimatedGoalCard(
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
 
-                // Progress percentage with animation
+                // Display progress percentage
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween

@@ -39,23 +39,23 @@ import java.io.ByteArrayOutputStream
 
 @Composable
 fun UserProfileScreen() {
-    // Context
+    // Context for Toast messages
     val context = LocalContext.current
 
-    // Firebase instances
+    // Firebase Authentication and Firestore instances
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
 
-    // Current User
+    // Get the currently logged-in user
     val currentUser = auth.currentUser
 
-    // State variables to hold user data. These use remember to survive recompositions.
+    // States for compose
     var user by remember { mutableStateOf<User?>(null) }
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var profilePicBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var isEditing by remember { mutableStateOf(false) }  // Track if the user is in edit mode
+    var isEditing by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(true) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -67,13 +67,13 @@ fun UserProfileScreen() {
             modifier = Modifier.fillMaxSize()
         )
 
-        // Semi-transparent overlay to improve text readability
+        // Semi-transparent overlay
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = Color.Black.copy(alpha = 0.3f)
         ) {}
 
-        // Fetch user data from Firestore when the screen is loaded or when the user changes.
+        // Fetch user data when the composable is first created or when the user changes
         LaunchedEffect(currentUser?.uid) {
             if (currentUser != null) {
                 loading = true
@@ -81,7 +81,7 @@ fun UserProfileScreen() {
                     .get()
                     .addOnSuccessListener { document ->
                         if (document.exists()) {
-                            // Map the document data to the User data class.
+                            // Map Firestore document to User data class
                             user = User(
                                 userId = document.getString("userId") ?: currentUser.uid,
                                 firstName = document.getString("firstName") ?: "",
@@ -89,10 +89,10 @@ fun UserProfileScreen() {
                                 email = document.getString("email") ?: currentUser.email ?: "",
                                 profilePicString = document.getString("profilePicString"),
                             )
-                            // Initialize the state variables with the fetched data.
                             firstName = user?.firstName ?: ""
                             lastName = user?.lastName ?: ""
                             email = user?.email ?: ""
+                            // Decode base64 string to Bitmap for profile picture
                             user?.profilePicString?.let {
                                 try {
                                     val imageBytes = decodeBase64(it)
@@ -110,15 +110,14 @@ fun UserProfileScreen() {
                                 }
                             }
                         } else {
-                            // If the user document doesn't exist, create a default User object.
+                            // Create default User object if document doesn't exist
                             user = User(
                                 userId = currentUser.uid,
                                 firstName = "",
                                 lastName = "",
-                                email = currentUser.email ?: "", // Use email from Firebase Auth
+                                email = currentUser.email ?: "",
                                 profilePicString = null
                             )
-                            // Initialize state variables.
                             firstName = ""
                             lastName = ""
                             email = currentUser.email ?: ""
@@ -137,16 +136,15 @@ fun UserProfileScreen() {
             }
         }
 
-        // Activity launcher for selecting an image from the gallery
+        // Activity launcher to pick an image from the gallery
         val galleryLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == android.app.Activity.RESULT_OK && result.data != null) {
                 val imageUri = result.data?.data
                 try {
-                    // Load the image into a Bitmap. Consider resizing here to save memory.
                     val inputStream = imageUri?.let { context.contentResolver.openInputStream(it) }
-                    profilePicBitmap = BitmapFactory.decodeStream(inputStream)
+                    profilePicBitmap = BitmapFactory.decodeStream(inputStream) // Load selected image
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Toast.makeText(context, "Failed to load image", Toast.LENGTH_SHORT).show()
@@ -154,26 +152,20 @@ fun UserProfileScreen() {
             }
         }
 
-        // Function to handle saving the user data to Firestore.
+        // Function to save user data to Firestore
         fun saveUserData() {
             if (currentUser != null) {
                 val userRef = firestore.collection("Users").document(currentUser.uid)
-
-                // Prepare the data to be updated.
                 val updates = hashMapOf<String, Any>(
                     "firstName" to firstName,
                     "lastName" to lastName,
-                    "email" to email, //update email in firestore
+                    "email" to email, // Update email in Firestore
                 )
 
                 // Handle profile picture upload if a new one is selected
                 if (profilePicBitmap != null) {
                     val baos = ByteArrayOutputStream()
-                    profilePicBitmap?.compress(
-                        Bitmap.CompressFormat.JPEG,
-                        80,
-                        baos
-                    ) // Compress the image.
+                    profilePicBitmap?.compress(Bitmap.CompressFormat.JPEG, 80, baos)
                     val data = baos.toByteArray()
                     val profilePicString = Base64.encodeToString(data, Base64.DEFAULT)
                     updates["profilePicString"] = profilePicString
@@ -184,7 +176,7 @@ fun UserProfileScreen() {
                                 "Profile updated successfully!",
                                 Toast.LENGTH_SHORT
                             ).show()
-                            isEditing = false // Exit edit mode after successful save.
+                            isEditing = false // Exit edit mode
                             user = user?.copy(
                                 firstName = firstName,
                                 lastName = lastName,
@@ -201,7 +193,7 @@ fun UserProfileScreen() {
                             ).show()
                         }
                 } else {
-                    // If no new profile picture, just update the text fields.
+                    // Update text fields if no new profile picture
                     userRef.update(updates)
                         .addOnSuccessListener {
                             Toast.makeText(
@@ -209,7 +201,7 @@ fun UserProfileScreen() {
                                 "Profile updated successfully!",
                                 Toast.LENGTH_SHORT
                             ).show()
-                            isEditing = false // Exit edit mode after successful save.
+                            isEditing = false // Exit edit mode
                             user = user?.copy(
                                 firstName = firstName,
                                 lastName = lastName,
@@ -228,8 +220,8 @@ fun UserProfileScreen() {
             }
         }
 
+        // Show loading indicator while data is being fetched
         if (loading) {
-            // Loading indicator
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -258,7 +250,7 @@ fun UserProfileScreen() {
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Profile Header with title
+                // Profile title
                 Text(
                     "User Profile",
                     color = Color.White,
@@ -267,7 +259,7 @@ fun UserProfileScreen() {
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
 
-                // Profile Card
+                // Profile information card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -289,7 +281,7 @@ fun UserProfileScreen() {
                                 .padding(bottom = 20.dp)
                                 .size(140.dp)
                         ) {
-                            // Profile picture with border
+                            // Display profile picture with border
                             Surface(
                                 modifier = Modifier
                                     .size(140.dp)
@@ -315,7 +307,7 @@ fun UserProfileScreen() {
                                 }
                             }
 
-                            // Change picture button floating at the bottom right of the profile pic
+                            // Button to change profile picture in edit mode
                             if (isEditing) {
                                 FloatingActionButton(
                                     onClick = {
@@ -337,7 +329,7 @@ fun UserProfileScreen() {
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // User information fields
+                        // Input field for first name
                         OutlinedTextField(
                             value = firstName,
                             onValueChange = { firstName = it },
@@ -345,7 +337,7 @@ fun UserProfileScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp),
-                            enabled = isEditing,
+                            enabled = isEditing, // Only enabled in edit mode
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Text,
                                 imeAction = ImeAction.Next
@@ -360,6 +352,7 @@ fun UserProfileScreen() {
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        // Input field for last name
                         OutlinedTextField(
                             value = lastName,
                             onValueChange = { lastName = it },
@@ -367,7 +360,7 @@ fun UserProfileScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp),
-                            enabled = isEditing,
+                            enabled = isEditing, // Only enabled in edit mode
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Text,
                                 imeAction = ImeAction.Next
@@ -382,14 +375,15 @@ fun UserProfileScreen() {
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        // Display for email (not editable)
                         OutlinedTextField(
                             value = email,
-                            onValueChange = { email = it },
+                            onValueChange = { },
                             label = { Text("Email") },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp),
-                            enabled = false,
+                            enabled = false, // Disabled for editing
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Email,
                                 imeAction = ImeAction.Done
@@ -404,21 +398,20 @@ fun UserProfileScreen() {
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Buttons section
+                        // Buttons to either edit or save/cancel profile
                         if (isEditing) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                // Cancel button
+                                // Cancel edit button
                                 OutlinedButton(
                                     onClick = {
-                                        // Cancel editing, revert to original data
                                         isEditing = false
                                         firstName = user?.firstName ?: ""
                                         lastName = user?.lastName ?: ""
                                         email = user?.email ?: ""
-                                        profilePicBitmap = null // Clear the selected image
+                                        profilePicBitmap = null // Clear any selected new image
                                     },
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(12.dp),
@@ -431,10 +424,9 @@ fun UserProfileScreen() {
                                     )
                                 }
 
-                                // Save button
+                                // Save changes button
                                 Button(
                                     onClick = {
-                                        // Save the changes
                                         saveUserData()
                                     },
                                     modifier = Modifier.weight(1f),
@@ -454,7 +446,6 @@ fun UserProfileScreen() {
                             // Edit profile button
                             Button(
                                 onClick = {
-                                    // Enter edit mode
                                     isEditing = true
                                 },
                                 modifier = Modifier

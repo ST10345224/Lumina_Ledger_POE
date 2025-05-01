@@ -6,6 +6,9 @@ import android.graphics.BitmapFactory
 import java.io.ByteArrayOutputStream
 import android.util.Base64
 
+// Functions for image processing
+// Converts iamges to Bitmap then to Base64 string to store in Firestore DB
+
 // Compresses Bitmap
 fun compressBitmap(bitmap: Bitmap, quality: Int = 70): ByteArray {
     val outputStream = ByteArrayOutputStream()

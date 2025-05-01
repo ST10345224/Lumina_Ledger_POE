@@ -33,36 +33,35 @@ class MainActivity : ComponentActivity() {
         setContent {
             LuminaLedgerPOETheme {
                 var isSplashScreenVisible by remember { mutableStateOf(true) }
-                var isRegistering by remember { mutableStateOf(false) } // Now starts with Login
-                var isLoggedIn by remember { mutableStateOf(false) }
+                var isRegistering by remember { mutableStateOf(false) } // State to track if the user is on the registration screen
+                var isLoggedIn by remember { mutableStateOf(false) } // State to track if the user is logged in
                 val coroutineScope = rememberCoroutineScope()
 
                 LaunchedEffect(key1 = true) {
-                    delay(3000) // Wait for 3 seconds
-                    isSplashScreenVisible = false // Hide the splash screen
+                    delay(3000) // Simulate splash screen duration
+                    isSplashScreenVisible = false // Hide splash screen after delay
                 }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-
-
+                    // Conditional rendering based on app state
                     if (isSplashScreenVisible) {
-                        SplashScreen() // Now calling the SplashScreen composable from its own file
+                        SplashScreen() // Show the splash screen
                     } else if (isLoggedIn) {
-                        NavigationMap() // Calling the navbar and navigation
-
+                        NavigationMap() // Show the main navigation if logged in
                     } else {
+                        // Show either the login or registration screen
                         if (isRegistering) {
                             RegisterScreen(
-                                onNavigateToLogin = { isRegistering = false },
-                                onRegistrationSuccess = { isLoggedIn = true }
+                                onNavigateToLogin = { isRegistering = false }, // Callback to go back to login
+                                onRegistrationSuccess = { isLoggedIn = true } // Callback for successful registration
                             )
                         } else {
                             LoginScreen(
-                                onNavigateToRegister = { isRegistering = true },
-                                onLoginSuccess = { isLoggedIn = true }
+                                onNavigateToRegister = { isRegistering = true }, // Callback to go to registration
+                                onLoginSuccess = { isLoggedIn = true } // Callback for successful login
                             )
                         }
                     }

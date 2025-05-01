@@ -39,7 +39,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
-// Define the Screen Data Class
+// Screen Data Class
 data class Screen(val route: String, val title: String, val icon: ImageVector)
 
 // Define the Screens that can be navigated to
@@ -51,39 +51,37 @@ val newExpenseScreen = Screen("newExpense", "New Expense", Icons.Filled.Add)
 val addGoalScreen = Screen("addGoal", "Add Goal", Icons.Filled.Add)
 val categoryScreen = Screen("category", "Category", Icons.Filled.Settings)
 
-// Create the List of Screens
+// List of Screens
 val screens = listOf(profileScreen, homeScreen, categoryScreen, ledgerScreen, goalScreen, newExpenseScreen)
+
 // Main App Composable with Navigation logic
 @Composable
 fun NavigationMap() {
     val navController = rememberNavController()
 
     Scaffold(
-        bottomBar = { BottomAppNavigationBar(navController = navController) }
-    ) { paddingValues ->  // Use paddingValues here
-        // Navigation Host
+        bottomBar = { BottomAppNavigationBar(navController = navController) } // Set the bottom navigation bar
+    ) { paddingValues ->  // Padding for the content area
+        // Navigation Host to manage different screens
         NavHost(
             navController = navController,
-            startDestination = homeScreen.route, // Default destination
-            modifier = Modifier.padding(paddingValues)  // Apply padding to NavHost
+            startDestination = homeScreen.route, // Initial screen
+            modifier = Modifier.padding(paddingValues)  // Apply padding to the content
         ) {
-            composable(route = profileScreen.route) { ProfileScreen() }
-            composable(route = homeScreen.route) { HomeScreen() }
-            composable(route = categoryScreen.route) { CategoriesScreen() }
-            composable(route = ledgerScreen.route) { ledgerScreen() }
+            composable(route = profileScreen.route) { ProfileScreen() } // Define Profile screen route
+            composable(route = homeScreen.route) { HomeScreen() } // Define Home screen route
+            composable(route = categoryScreen.route) { CategoriesScreen() } // Define Categories screen route
+            composable(route = ledgerScreen.route) { ledgerScreen() } // Define Ledger screen route
             composable(route = goalScreen.route) {
-                GoalsScreen(onAddGoal = {
-                    navController.navigate(addGoalScreen.route) // Navigate to AddGoalScreen
+                GoalsScreen(onAddGoal = { // Navigate to add goal screen
+                    navController.navigate(addGoalScreen.route)
                 })
             }
             composable(route = newExpenseScreen.route) {
-                // Call CreatePostScreen and pass the callback
-                AddExpenseScreen (onExpenseAdded = {
-                    // Define what happens after a post is created
-                    navController.navigate(ledgerScreen.route) { // Go back to feed
-                        popUpTo(newExpenseScreen.route) { inclusive = true } // Remove new post screen from backstack, otherwise it will stay open
+                AddExpenseScreen (onExpenseAdded = { // Handle expense creation
+                    navController.navigate(ledgerScreen.route) { // Go back to ledger
+                        popUpTo(newExpenseScreen.route) { inclusive = true } // Clear new expense screen from back stack
                     }
-                    // Optionally show a message
                     Toast.makeText(
                         navController.context,
                         "Expense created!",
@@ -91,10 +89,10 @@ fun NavigationMap() {
                     ).show()
                 })
             }
-            composable(route = addGoalScreen.route){ //Added route for AddGoalScreen
-                AddGoalScreen(onGoalAdded = {
-                    navController.navigate(goalScreen.route){
-                        popUpTo(addGoalScreen.route){inclusive = true}
+            composable(route = addGoalScreen.route){ // Route for adding a new goal
+                AddGoalScreen(onGoalAdded = { // Handle goal creation
+                    navController.navigate(goalScreen.route){ // Go back to goals screen
+                        popUpTo(addGoalScreen.route){inclusive = true} // Clear add goal screen from back stack
                     }
                     Toast.makeText(
                         navController.context,
@@ -108,7 +106,6 @@ fun NavigationMap() {
 }
 
 // Bottom Navigation Bar Composable
-
 @Composable
 fun BottomAppNavigationBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -118,23 +115,23 @@ fun BottomAppNavigationBar(navController: NavHostController) {
         containerColor = Color(0xFFFFFFFF),
         tonalElevation = 8.dp,
         modifier = Modifier
-            .height(80.dp)  // Reduced height for better proportions
+            .height(80.dp)
     ) {
         screens.forEach { screen ->
             NavigationBarItem(
                 modifier = Modifier
-                    .weight(1f)  // Equal weight for all items
+                    .weight(1f)
                     .padding(vertical = 8.dp),
                 icon = {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.height(40.dp)  // Fixed height for icon area
+                        modifier = Modifier.height(40.dp)
                     ) {
                         Icon(
                             imageVector = screen.icon,
                             contentDescription = screen.title,
-                            modifier = Modifier.size(24.dp)  // Standard icon size
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 },
@@ -142,19 +139,19 @@ fun BottomAppNavigationBar(navController: NavHostController) {
                     Text(
                         text = screen.title,
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp,  // Slightly larger font
-                        maxLines = 1,  // Prevent text from wrapping
-                        overflow = TextOverflow.Ellipsis  // Add ellipsis if text is too long
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
-                selected = currentRoute == screen.route,
+                selected = currentRoute == screen.route, // Highlight the currently selected item
                 onClick = {
-                    navController.navigate(screen.route) {
+                    navController.navigate(screen.route) { // Navigate to the selected screen
                         popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+                            saveState = true // Save state of the popped destinations
                         }
-                        launchSingleTop = true
-                        restoreState = true
+                        launchSingleTop = true // Avoid multiple instances of the same screen
+                        restoreState = true // Restore state of the navigated screen
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
@@ -162,14 +159,13 @@ fun BottomAppNavigationBar(navController: NavHostController) {
                     selectedTextColor = MaterialTheme.colorScheme.primary,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)  // Subtle selection indicator
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                 )
             )
         }
     }
 }
 // Screen Composables - put screen functions here
-
 
 @Composable
 fun ProfileScreen() {
@@ -191,5 +187,4 @@ fun ledgerScreen() {
 fun GoalScreen() {
     GoalsScreen(onAddGoal = {})
 }
-
 

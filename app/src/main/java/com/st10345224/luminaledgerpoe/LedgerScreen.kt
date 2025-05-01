@@ -1,5 +1,6 @@
 package com.st10345224.luminaledgerpoe
 
+import android.annotation.SuppressLint
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.compose.animation.AnimatedVisibility
@@ -35,7 +36,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
@@ -61,7 +61,6 @@ import androidx.compose.ui.unit.dp
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.Instant
 import java.time.LocalDateTime
@@ -70,22 +69,33 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+@SuppressLint("DefaultLocale")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun LedgerScreen() {
+    // State to hold the list of expenses
     val expenses = remember { mutableStateListOf<Expense>() }
+    // Coroutine scope for asynchronous operations
     val coroutineScope = rememberCoroutineScope()
+    // Firestore instance
     val firestore = Firebase.firestore
+    // State to track loading state
     val loading = remember { mutableStateOf(true) }
+    // State to hold any error messages
     val error = remember { mutableStateOf<String?>(null) }
+    // State to manage the selected year and month for filtering expenses
     var selectedYearMonth by remember { mutableStateOf(YearMonth.now()) }
+    // State to control the visibility of the date picker
     var showDatePicker by remember { mutableStateOf(false) }
 
-    // Currency conversion variables
+    // State for the selected currency for display
     var selectedCurrency by remember { mutableStateOf("ZAR") }
+    // State to control the visibility of the currency dropdown
     var showCurrencyDropdown by remember { mutableStateOf(false) }
+    // List of available currencies
     val currencies = remember { listOf("ZAR", "USD", "EUR", "GBP", "JPY", "CNY", "AUD") }
+
+    // Map of exchange rates relative to ZAR (as base)
     val exchangeRates = remember {
         mapOf(
             "ZAR" to 1.0,
@@ -98,11 +108,13 @@ fun LedgerScreen() {
         )
     }
 
+    // State for the date picker
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = Instant.now().toEpochMilli(),
         yearRange = 2020..2030
     )
 
+    // Suspend function to fetch expenses from Firestore for the selected year and month
     suspend fun fetchExpenses(yearMonth: YearMonth) {
         loading.value = true
         try {
@@ -124,6 +136,8 @@ fun LedgerScreen() {
                     null
                 }
             }
+
+            // Filter expenses to only include those from the selected year and month
             val filtered = allExpenses.filter {
                 YearMonth.from(
                     LocalDateTime.ofInstant(it.Date.toDate().toInstant(), ZoneId.systemDefault())
@@ -138,7 +152,7 @@ fun LedgerScreen() {
         }
     }
 
-    // Function to convert expense amount to selected currency
+    // Function to convert an amount from one currency to another using the stored rates
     fun convertCurrency(amount: Double, fromCurrency: String, toCurrency: String): Double {
         if (fromCurrency == toCurrency) return amount
         val amountInZAR = amount / (exchangeRates[fromCurrency] ?: 1.0)
@@ -146,7 +160,7 @@ fun LedgerScreen() {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background with overlay
+        // Background with overlay for better readability
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
                 painter = painterResource(id = R.drawable.splashbackground),
@@ -161,10 +175,12 @@ fun LedgerScreen() {
             )
         }
 
+        // Fetch expenses whenever the selected year and month changes
         LaunchedEffect(selectedYearMonth) {
             fetchExpenses(selectedYearMonth)
         }
 
+        // Date picker dialog
         if (showDatePicker) {
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },
@@ -203,7 +219,7 @@ fun LedgerScreen() {
         }
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header with month selector and currency selector
+            // Header with month and currency selection
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -223,6 +239,7 @@ fun LedgerScreen() {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        // Display the current selected month
                         Text(
                             text = selectedYearMonth.format(
                                 DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
@@ -233,8 +250,10 @@ fun LedgerScreen() {
                             )
                         )
 
+                        // Currency selection and month change buttons
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box {
+                                // Button to open the currency dropdown
                                 Button(
                                     onClick = { showCurrencyDropdown = true },
                                     modifier = Modifier.height(40.dp),
@@ -244,12 +263,13 @@ fun LedgerScreen() {
                                     )
                                 ) {
                                     Text(
-                                        text = "$",
+                                        text = selectedCurrency,
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
 
+                                // Dropdown menu for currency selection
                                 DropdownMenu(
                                     expanded = showCurrencyDropdown,
                                     onDismissRequest = { showCurrencyDropdown = false }
@@ -265,7 +285,9 @@ fun LedgerScreen() {
                                     }
                                 }
                             }
-                            Spacer(modifier = Modifier.width(8.dp)) // Add spacing here
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            // Button to show the date picker to change the month
                             Button(
                                 onClick = { showDatePicker = true },
                                 colors = ButtonDefaults.buttonColors(
@@ -280,6 +302,7 @@ fun LedgerScreen() {
                 }
             }
 
+            // Conditional display based on loading state, errors, or empty expenses
             when {
                 loading.value -> {
                     Box(
@@ -329,6 +352,7 @@ fun LedgerScreen() {
                     }
                 }
                 else -> {
+                    // List of expenses
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -347,7 +371,7 @@ fun LedgerScreen() {
                         }
                     }
 
-                    // Total expenses footer
+                    // Footer showing the total expenses for the selected month
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -396,10 +420,14 @@ fun ExpenseCard(
     selectedCurrency: String,
     convertCurrency: (Double, String) -> Double
 ) {
+    // State to track if the expense card is expanded to show more details
     var expanded by remember { mutableStateOf(false) }
+    // State to hold the decoded image bitmap if available
     var bitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    // State to track if there was an error loading the image
     var imageLoadError by remember { mutableStateOf(false) }
 
+    // Load the image in a LaunchedEffect to handle lifecycle properly
     LaunchedEffect(expense.exPhotoString) {
         if (expense.exPhotoString.isNotBlank()) {
             try {
@@ -417,26 +445,27 @@ fun ExpenseCard(
         }
     }
 
-    // Convert expense amount to selected currency
+    // Convert the expense amount to the selected currency
     val convertedAmount = convertCurrency(expense.exAmount, expense.Currency)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { expanded = !expanded },
+            .clickable { expanded = !expanded }, // Make the card clickable to expand/collapse
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header row
+            // Header row of the expense card
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    // Expense title
                     Text(
                         text = expense.exTitle,
                         style = MaterialTheme.typography.titleMedium,
@@ -444,11 +473,13 @@ fun ExpenseCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    // Formatted date of the expense
                     Text(
                         text = formatTimestamp(expense.Date),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
+                    // Category of the expense
                     Text(
                         text = expense.Category,
                         style = MaterialTheme.typography.bodySmall,
@@ -456,6 +487,7 @@ fun ExpenseCard(
                     )
                 }
 
+                // Display the expense amount in the selected currency
                 Text(
                     text = "$selectedCurrency ${String.format("%.2f", convertedAmount)}",
                     style = MaterialTheme.typography.titleMedium,
@@ -465,7 +497,7 @@ fun ExpenseCard(
                 )
             }
 
-            // Original currency if different
+            // Display the original currency and amount if it's different from the selected currency
             if (expense.Currency != selectedCurrency) {
                 Text(
                     text = "Original: ${expense.Currency} ${String.format("%.2f", expense.exAmount)}",
@@ -475,13 +507,14 @@ fun ExpenseCard(
                 )
             }
 
-            // Expandable content
+            // Animated visibility for the expanded content
             AnimatedVisibility(
                 visible = expanded,
                 enter = expandVertically(),
                 exit = shrinkVertically()
             ) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
+                    // Expense description
                     if (expense.exDescription.isNotBlank()) {
                         Text(
                             text = expense.exDescription,
@@ -490,6 +523,7 @@ fun ExpenseCard(
                         )
                     }
 
+                    // Display the attached image if available
                     if (expense.exPhotoString.isNotBlank()) {
                         if (imageLoadError) {
                             Text(
@@ -508,7 +542,6 @@ fun ExpenseCard(
                                     .clip(MaterialTheme.shapes.medium)
                             )
                         } else {
-                            // You might want to show a loading indicator here if needed
                             Text(
                                 text = "Loading receipt...",
                                 style = MaterialTheme.typography.bodySmall,
@@ -528,6 +561,7 @@ fun ExpenseCard(
     }
 }
 
+// Function to format a Firebase Timestamp into a readable date and time string
 fun formatTimestamp(timestamp: Timestamp): String {
     return DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm", Locale.getDefault())
         .format(timestamp.toDate().toInstant().atZone(ZoneId.systemDefault()))
