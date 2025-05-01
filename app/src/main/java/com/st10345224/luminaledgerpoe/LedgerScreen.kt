@@ -61,6 +61,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 import java.time.Instant
@@ -78,6 +79,8 @@ fun LedgerScreen() {
     val expenses = remember { mutableStateListOf<Expense>() }
     // Coroutine scope for asynchronous operations
     val coroutineScope = rememberCoroutineScope()
+    // Firebase Authentication
+    val auth = FirebaseAuth.getInstance()
     // Firestore instance
     val firestore = Firebase.firestore
     // State to track loading state
@@ -108,6 +111,9 @@ fun LedgerScreen() {
             "AUD" to 0.083
         )
     }
+
+    // Get the currently logged-in user
+    val currentUser = auth.currentUser
 
     // State for the date picker
     val datePickerState = rememberDatePickerState(
@@ -140,14 +146,13 @@ fun LedgerScreen() {
             }
 
             // Filter expenses to only include those from the selected year and month
-//            val filtered = allExpenses.filter {
-//                YearMonth.from(
-//                    LocalDateTime.ofInstant(it.Date.toDate().toInstant(), ZoneId.systemDefault())
-//                ) == yearMonth
-//            }
+            val filteredByUser = allExpenses.filter { expense ->
+                val currentUserUid = auth.currentUser?.uid // Get uid safely
+                currentUserUid != null && currentUserUid == expense.UserID // userId check
+            }
 
             // Debugging: Filter expenses to only include those from the selected year and month
-            val filtered = allExpenses.filter { expense ->
+            val filtered = filteredByUser.filter { expense ->
                 val expenseYearMonth = YearMonth.from(
                     LocalDateTime.ofInstant(expense.Date.toDate().toInstant(), ZoneId.systemDefault())
                 )
