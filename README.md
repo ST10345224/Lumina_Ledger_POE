@@ -21,6 +21,20 @@ Lumina Ledger helps you track your spending, plan budgets, and set long‑term f
 
 ---
 
+### Instructions
+1. Download and install the latest .apk from releases.
+2. Login with username : `test@test.com` and password: `testpassword` for a populated account.
+3. Alternatively register a new account.
+4. Use the navbar to navigate the app to add expenses and goals.
+
+---
+
+### Youtube link:
+#### v0.02
+- [POE Part 2 - LUMINA LEDGER](https://youtu.be/l5ndSO8H1Ts)
+
+---
+
 ### 📸Screenshots
 
 #### Login
