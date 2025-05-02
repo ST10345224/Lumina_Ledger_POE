@@ -91,13 +91,18 @@ fun LedgerScreen() {
     var selectedYearMonth by remember { mutableStateOf(YearMonth.now()) }
     // State to control the visibility of the date picker
     var showDatePicker by remember { mutableStateOf(false) }
-
+    // State for the selected category for filtering expenses
+    var selectedCategory by remember { mutableStateOf("All") }
+    // State to control the visibility of the category dropdown
+    var showCategoryDropdown by remember { mutableStateOf(false) }
     // State for the selected currency for display
     var selectedCurrency by remember { mutableStateOf("ZAR") }
     // State to control the visibility of the currency dropdown
     var showCurrencyDropdown by remember { mutableStateOf(false) }
     // List of available currencies
     val currencies = remember { listOf("ZAR", "USD", "EUR", "GBP", "JPY", "CNY", "AUD") }
+    // List of available categories
+    var categoryList by remember { mutableStateOf(emptyList<String>()) }
 
     // Map of exchange rates relative to ZAR (as base)
     val exchangeRates = remember {
@@ -122,7 +127,7 @@ fun LedgerScreen() {
     )
 
     // Suspend function to fetch expenses from Firestore for the selected year and month
-    suspend fun fetchExpenses(yearMonth: YearMonth) {
+    suspend fun fetchExpenses(yearMonth: YearMonth, category: String) {
         Log.d("fetchExpenses", "Fetching expenses for yearMonth: $yearMonth")
         loading.value = true
         try {
@@ -151,8 +156,14 @@ fun LedgerScreen() {
                 currentUserUid != null && currentUserUid == expense.UserID // userId check
             }
 
-            // Debugging: Filter expenses to only include those from the selected year and month
-            val filtered = filteredByUser.filter { expense ->
+            // Filter expenses based on the selected category
+            var filteredByCategory = filteredByUser
+            if (category != "All") {
+                filteredByCategory = filteredByUser.filter { it.Category == category }
+            }
+
+            // Filter expenses to only include those from the selected year and month
+            val filtered = filteredByCategory.filter { expense ->
                 val expenseYearMonth = YearMonth.from(
                     LocalDateTime.ofInstant(expense.Date.toDate().toInstant(), ZoneId.systemDefault())
                 )
@@ -167,6 +178,12 @@ fun LedgerScreen() {
             error.value = "Error fetching expenses: ${e.message}"
             loading.value = false
         }
+    }
+
+    // Function to get a list of categories from Firestore
+    suspend fun getCategories(): List<String> {
+        val snapshot = firestore.collection("Category").get().await()
+        return snapshot.documents.mapNotNull { it.getString("name") }
     }
 
     // Function to convert an amount from one currency to another using the stored rates
@@ -192,9 +209,10 @@ fun LedgerScreen() {
             )
         }
 
-        // Fetch expenses whenever the selected year and month changes
-        LaunchedEffect(selectedYearMonth) {
-            fetchExpenses(selectedYearMonth)
+        // Fetch expenses whenever the selected year and month or category changes
+        LaunchedEffect(selectedYearMonth, selectedCategory) {
+            fetchExpenses(selectedYearMonth, selectedCategory)
+            categoryList = getCategories()
         }
 
         // Date picker dialog
@@ -257,18 +275,63 @@ fun LedgerScreen() {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         // Display the current selected month
-                        Text(
-                            text = selectedYearMonth.format(
-                                DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-                            ),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
+//                        Text(
+//                            text = selectedYearMonth.format(
+//                                DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+//                            ),
+//                            style = MaterialTheme.typography.titleLarge.copy(
+//                                fontWeight = FontWeight.Bold,
+//                                color = MaterialTheme.colorScheme.onSurface
+//                            )
+//                        )
 
                         // Currency selection and month change buttons
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box {
+                                // Button to open the category dropdown
+                                Button(
+                                    onClick = { showCategoryDropdown = true },
+                                    modifier = Modifier.height(40.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                ) {
+                                    Text(
+                                        text = selectedCategory,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+
+                                // Dropdown menu for category selection
+                                DropdownMenu(
+                                    expanded = showCategoryDropdown,
+                                    onDismissRequest = { showCategoryDropdown = false }
+                                ) {
+                                    // Add the "All" option at the beginning
+                                    DropdownMenuItem(
+                                        text = { Text("All") },
+                                        onClick = {
+                                            selectedCategory = "All"
+                                            showCategoryDropdown = false
+                                        }
+                                    )
+
+                                    // Add other categories from firestore
+                                    categoryList.forEach { category ->
+                                        DropdownMenuItem(
+                                            text = { Text(category) },
+                                            onClick = {
+                                                selectedCategory = category
+                                                showCategoryDropdown = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+
                             Box {
                                 // Button to open the currency dropdown
                                 Button(
@@ -312,7 +375,8 @@ fun LedgerScreen() {
                                     contentColor = MaterialTheme.colorScheme.onPrimary
                                 )
                             ) {
-                                Text("Change Month")
+                                Text(selectedYearMonth.format(
+                                    DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())))
                             }
                         }
                     }
