@@ -1,5 +1,6 @@
 package com.st10345224.luminaledgerpoe
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -54,12 +55,9 @@ fun HomeScreen() {
     // State to remember the scroll position of the screen
     val scrollState = rememberScrollState() // Remember the scroll state
 
-    // Currency conversion rates from ZAR to other currencies
-    val exchangeRates = mapOf(
-        "ZAR" to 1.0,
-        "USD" to 0.055,
-        "EUR" to 0.051
-    )
+    val exchangeRates = remember { mutableStateOf<Map<String, Double>>(emptyMap()) }
+    val baseCurrency = "ZAR"
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Background image
@@ -74,6 +72,24 @@ fun HomeScreen() {
         LaunchedEffect(Unit) {
             coroutineScope.launch {
                 try {
+                    // Fetch Exchange Rates FIRST
+                    val fetchedRates = CurrencyApiService.getLatestConversionRates(baseCurrency)
+                    if (fetchedRates != null) {
+                        exchangeRates.value = fetchedRates
+                        Log.d("CurrencyApi", "Fetched Exchange Rates: ${exchangeRates.value}") // For debugging
+                    } else {
+                        // Handle error in fetching rates, maybe set a default or show an error
+                        error.value = "Failed to fetch exchange rates. Using default rates."
+                        // Fallback to a hardcoded map if API fails
+                        exchangeRates.value = mapOf(
+                            "ZAR" to 1.0,
+                            "USD" to 0.055,
+                            "EUR" to 0.051
+                        )
+                        Log.d("CurrencyApi", "Failed to fetch exchange rates. Using default rates.") // For debugging"Falling back to default rates due to API error.") // For debugging
+                    }
+
+
                     // Get the current year and month
                     val currentYearMonth = YearMonth.now()
                     // Fetch expenses from Firestore
@@ -256,7 +272,7 @@ fun HomeScreen() {
                                             goal = goal,
                                             expenses = expenses,
                                             selectedCurrency = selectedCurrency.value,
-                                            exchangeRates = exchangeRates
+                                            exchangeRates = exchangeRates.value
                                         )
                                     }
                                 }
@@ -276,12 +292,12 @@ fun HomeScreen() {
 fun ExpenseDonutChart(
     expenses: List<Expense>,
     selectedCurrency: String,
-    exchangeRates: Map<String, Double>
+    exchangeRates: MutableState<Map<String, Double>>
 ) {
     // Calculate the total expenses in the base currency (ZAR)
     val totalExpensesZAR = expenses.sumOf { it.exAmount }
     // Get the exchange rate for the selected currency, defaulting to 1.0 if not found
-    val rate = exchangeRates[selectedCurrency] ?: 1.0
+    val rate = exchangeRates.value[selectedCurrency] ?: 1.0
     // Calculate the total expenses in the selected currency
     val totalExpenses = totalExpensesZAR * rate
 
