@@ -42,6 +42,12 @@ import androidx.navigation.compose.rememberNavController
 // Screen Data Class
 data class Screen(val route: String, val title: String, val icon: ImageVector)
 
+// --- ADDED: Define a constant for your achievements route ---
+object AppDestinations {
+    const val ACHIEVEMENTS_ROUTE = "achievements"
+}
+// --- END ADDED ---
+
 // Define the Screens that can be navigated to
 val profileScreen = Screen("profile", "Profile", Icons.Filled.Person)
 val homeScreen = Screen("home", "Home", Icons.Filled.Home)
@@ -69,7 +75,7 @@ fun NavigationMap() {
             modifier = Modifier.padding(paddingValues)  // Apply padding to the content
         ) {
             composable(route = profileScreen.route) { ProfileScreen() } // Define Profile screen route
-            composable(route = homeScreen.route) { HomeScreen() } // Define Home screen route
+            composable(route = homeScreen.route) { HomeScreen(navController = navController) } // Define Home screen route
             composable(route = categoryScreen.route) { CategoriesScreen() } // Define Categories screen route
             composable(route = ledgerScreen.route) { ledgerScreen() } // Define Ledger screen route
             composable(route = goalScreen.route) {
@@ -101,6 +107,10 @@ fun NavigationMap() {
                     ).show()
                 })
             }
+            composable(route = AppDestinations.ACHIEVEMENTS_ROUTE) {
+                AchievementsScreen()
+            }
+
         }
     }
 }
@@ -148,7 +158,7 @@ fun BottomAppNavigationBar(navController: NavHostController) {
                 onClick = {
                     navController.navigate(screen.route) { // Navigate to the selected screen
                         popUpTo(navController.graph.startDestinationId) {
-                            saveState = true // Save state of the popped destinations
+                            saveState = false // Save state of the popped destinations
                         }
                         launchSingleTop = true // Avoid multiple instances of the same screen
                         restoreState = true // Restore state of the navigated screen

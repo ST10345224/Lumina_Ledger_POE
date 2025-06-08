@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
@@ -31,9 +32,10 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.random.Random
+import androidx.navigation.NavHostController
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavHostController) {
     // State to hold the list of fetched expenses for the current month
     val expenses = remember { mutableStateListOf<Expense>() }
     // State to hold the list of fetched goals
@@ -245,7 +247,7 @@ fun HomeScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp)
-                            .height(300.dp), // Set a fixed height for the goals card
+                            .height(200.dp), // Set a fixed height for the goals card
                         elevation = CardDefaults.cardElevation(4.dp)
                     ) {
                         Column(
@@ -281,6 +283,54 @@ fun HomeScreen() {
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Card displaying the user's achievements
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .height(200.dp) // Set a fixed height for the goals card
+                            .clickable {
+                                navController.navigate(AppDestinations.ACHIEVEMENTS_ROUTE)
+                            },
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxSize()
+                        ) {
+                            Text(
+                                text = "Achievements",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 16.dp)  // Increased bottom padding
+                            )
+                            // Display the progress for each goal
+                            if (goals.isNotEmpty()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .verticalScroll(rememberScrollState()), // Enable scrolling within the goals section
+                                    verticalArrangement = Arrangement.spacedBy(24.dp)  // Add space between goal progress bars
+                                ) {
+                                    goals.forEach { goal ->
+                                        GoalProgressBar(
+                                            goal = goal,
+                                            expenses = expenses,
+                                            selectedCurrency = selectedCurrency.value,
+                                            exchangeRates = exchangeRates.value
+                                        )
+                                    }
+                                }
+                            } else {
+                                Text(text = "No goals set for this month.")
+                            }
+                        }
+                    }
+
                 }
             }
         }
