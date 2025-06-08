@@ -54,6 +54,19 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.navigation.compose)
+
+    // For HTTP requests (OkHttp)
+    implementation(libs.okhttp)
+
+    // For JSON parsing (Gson)
+    implementation(libs.gson)
+
+    // Kotlin Coroutines for async operations
+    implementation(libs.kotlinx.coroutines.android)
+
+    // https://mvnrepository.com/artifact/io.github.bytebeats/compose-charts
+    implementation(libs.compose.charts)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
