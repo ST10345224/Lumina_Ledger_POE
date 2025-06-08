@@ -64,6 +64,9 @@ dependencies {
     // Kotlin Coroutines for async operations
     implementation(libs.kotlinx.coroutines.android)
 
+    // https://mvnrepository.com/artifact/io.github.bytebeats/compose-charts
+    implementation(libs.compose.charts)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

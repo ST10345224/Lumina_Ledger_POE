@@ -38,6 +38,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.st10345224.luminaledgerpoe.ui.screens.StatisticsScreen
 
 // Screen Data Class
 data class Screen(val route: String, val title: String, val icon: ImageVector)
@@ -45,6 +46,7 @@ data class Screen(val route: String, val title: String, val icon: ImageVector)
 // --- ADDED: Define a constant for your achievements route ---
 object AppDestinations {
     const val ACHIEVEMENTS_ROUTE = "achievements"
+    const val STATISTICS_ROUTE = "statistics"
 }
 // --- END ADDED ---
 
@@ -109,6 +111,9 @@ fun NavigationMap() {
             }
             composable(route = AppDestinations.ACHIEVEMENTS_ROUTE) {
                 AchievementsScreen()
+            }
+            composable(route = AppDestinations.STATISTICS_ROUTE) {
+                StatisticsScreen()
             }
 
         }

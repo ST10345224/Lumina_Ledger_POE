@@ -222,7 +222,10 @@ fun HomeScreen(navController: NavHostController) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp),
+                            .padding(8.dp)
+                            .clickable {
+                                navController.navigate(AppDestinations.STATISTICS_ROUTE)
+                            },
                         elevation = CardDefaults.cardElevation(4.dp)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -247,7 +250,10 @@ fun HomeScreen(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp)
-                            .height(200.dp), // Set a fixed height for the goals card
+                            .height(200.dp) // Set a fixed height for the goals card
+                            .clickable {
+                                navController.navigate(goalScreen.route)
+                            },
                         elevation = CardDefaults.cardElevation(4.dp)
                     ) {
                         Column(
