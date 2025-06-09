@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
                 var isSplashScreenVisible by remember { mutableStateOf(true) }
                 var isRegistering by remember { mutableStateOf(false) } // State to track if the user is on the registration screen
                 var isLoggedIn by remember { mutableStateOf(false) } // State to track if the user is logged in
-                val coroutineScope = rememberCoroutineScope()
+                rememberCoroutineScope()
 
                 LaunchedEffect(key1 = true) {
                     delay(3000) // Simulate splash screen duration

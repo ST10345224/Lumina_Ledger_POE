@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-// (UserAchievement data class remains the same as before)
+
 data class UserAchievement(
     val definition: AchievementDefinition,
     val currentProgress: Int,
@@ -105,20 +105,11 @@ class AchievementsViewModel(
                 if (newUnlockedDate == null && newProgressValue >= definition.target) {
                     newUnlockedDate = Timestamp.now()
                     Log.d(TAG, "Achievement unlocked: ${definition.name}")
-                    // TODO: Add logic here to show a notification or toast
+
                 }
             }
             // --- End Logic for "First Spender" ---
 
-            // --- Generic increment logic (for other achievements if applicable) ---
-            // You can keep this block if you have achievements that just need a simple +1
-            // without requiring a full re-count of items.
-            // Example: If 'first_expense' wasn't special, you'd just do:
-            // newProgressValue = (currentProgress?.progress ?: 0) + incrementBy
-            // But since 'first_expense' is count-based, the above 'if' block handles it.
-            // You might add else if (achievementId == "some_other_increment_achievement") {
-            //      newProgressValue += incrementBy
-            // }
 
             // If the progress value or unlocked date has changed, update Firestore
             if (newProgressValue != (currentProgress?.progress ?: 0) || newUnlockedDate != currentProgress?.unlockedDate) {
@@ -136,7 +127,7 @@ class AchievementsViewModel(
     }
 }
 
-// Simple ViewModel factory to provide dependencies to your ViewModel
+// Simple ViewModel factory
 object AchievementsViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         if (modelClass.isAssignableFrom(AchievementsViewModel::class.java)) {

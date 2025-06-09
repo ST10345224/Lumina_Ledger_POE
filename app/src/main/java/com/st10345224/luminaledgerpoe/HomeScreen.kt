@@ -427,7 +427,6 @@ fun HomeScreen(navController: NavHostController) {
                                                     style = MaterialTheme.typography.bodySmall,
                                                     modifier = Modifier.align(Alignment.End)
                                                 )
-
                                                 // Completion Status
                                                 if (itemIsCompleted) {
                                                     Text(
@@ -441,10 +440,8 @@ fun HomeScreen(navController: NavHostController) {
                                         }
                                     }
                                 }
-
                             }
                         }
-
                     }
                 }
             }

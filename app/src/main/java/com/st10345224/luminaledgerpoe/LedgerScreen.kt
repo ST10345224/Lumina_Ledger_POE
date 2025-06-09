@@ -78,7 +78,7 @@ fun LedgerScreen() {
     // State to hold the list of expenses
     val expenses = remember { mutableStateListOf<Expense>() }
     // Coroutine scope for asynchronous operations
-    val coroutineScope = rememberCoroutineScope()
+    rememberCoroutineScope()
     // Firebase Authentication
     val auth = FirebaseAuth.getInstance()
     // Firestore instance
@@ -118,7 +118,7 @@ fun LedgerScreen() {
     }
 
     // Get the currently logged-in user
-    val currentUser = auth.currentUser
+    auth.currentUser
 
     // State for the date picker
     val datePickerState = rememberDatePickerState(

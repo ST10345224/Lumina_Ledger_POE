@@ -271,7 +271,7 @@ fun CategoriesScreen() {
                         TextField(
                             value = newCategoryName,
                             onValueChange = { newCategoryName = it },
-                            label = { androidx.compose.material3.Text("Category Name") },
+                            label = { Text("Category Name") },
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
                         // Row for icon selection

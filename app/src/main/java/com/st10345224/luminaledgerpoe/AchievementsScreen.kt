@@ -40,7 +40,7 @@ import java.util.Locale
 
 @Composable
 fun AchievementsScreen(
-    // Get the ViewModel instance using the factory we defined
+    // Get the ViewModel instance using the factory
     viewModel: AchievementsViewModel = viewModel(factory = AchievementsViewModelFactory)
 ) {
     // Collect the StateFlow from the ViewModel as Compose State
