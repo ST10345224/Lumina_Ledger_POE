@@ -26,7 +26,7 @@ class ExpensesRepository(
 
     /**
      * Fetches a Flow of expense documents for the current user within a specified date range.
-     * Expenses are ordered by the 'Date' field (capital D).
+     * Expenses are ordered by the 'date' field.
      *
      * @param startDate The start Timestamp for the query (inclusive).
      * @param endDate The end Timestamp for the query (inclusive).
@@ -92,7 +92,7 @@ class ExpensesRepository(
         }
     }.catch { e ->
         // This catch block will handle exceptions that occur within the callbackFlow's lambda
-        // or during the collection of this flow (e.g., if a subsequent operation on the flow fails).
+        // or during the collection of this flow
         Log.e(TAG, "Flow caught error for getExpensesInDateRange (outer catch)", e)
         emit(emptyList()) // Emit empty list on error
     }
@@ -104,8 +104,7 @@ class ExpensesRepository(
             return@flow
         }
 
-        // Fetch all expenses from Firestore - WARNING: This fetches ALL documents in the collection
-        // This is inefficient and costly for large datasets, but acceptable for a small uni project as per your request.
+        // Fetch all expenses from Firestore
         val snapshot = firestore.collection("Expenses")
             .whereEqualTo("userID", currentUserUid) // Filter by user ID on Firestore
             .get()
@@ -113,7 +112,7 @@ class ExpensesRepository(
 
         val expenses = snapshot.documents.mapNotNull { document ->
             try {
-                // Ensure field names match your Firestore document structure exactly
+                // Field names match Firestore document structure exactly
                 Expense(
                     exID = document.id, // Use document.id for the document ID
                     UserID = document.getString("userID") ?: "",

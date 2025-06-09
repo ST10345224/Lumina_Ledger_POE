@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.st10345224.luminaledgerpoe.Expense
@@ -16,8 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 
@@ -28,7 +25,7 @@ class StatisticsViewModel(
     private val _dailyExpenseData = MutableStateFlow<List<DailyExpenseData>>(emptyList())
     val dailyExpenseData: StateFlow<List<DailyExpenseData>> = _dailyExpenseData
 
-    // Reintroduce startDate and endDate
+    //  startDate and endDate
     private val _startDate = MutableStateFlow(getDefaultStartDate())
     val startDate: StateFlow<Long> = _startDate
 
@@ -156,7 +153,7 @@ class StatisticsViewModel(
     }
 }
 
-// ViewModel Factory for StatisticsViewModel remains largely the same
+// ViewModel Factory for StatisticsViewModel
 object StatisticsViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         if (modelClass.isAssignableFrom(StatisticsViewModel::class.java)) {

@@ -82,9 +82,7 @@ fun AddExpenseScreen(onExpenseAdded: (Expense) -> Unit) {
     // State to hold the selected currency for the expense (defaulting to ZAR)
     var selectedCurrency by remember { mutableStateOf("ZAR") }
     // State to control the expansion of the category dropdown
-    var expandedCategory by remember { mutableStateOf(false) }
     // State to control the expansion of the currency dropdown
-    var expandedCurrency by remember { mutableStateOf(false) }
     // Context of the current composable
     val context = LocalContext.current
     // Instance of Firebase Firestore
@@ -297,7 +295,7 @@ fun AddExpenseScreen(onExpenseAdded: (Expense) -> Unit) {
                         // Generate a unique ID for the expense
                         val exId = UUID.randomUUID().toString()
                         // Get the current timestamp
-                        val currentDate = Date()
+                        Date()
                         // Create a new Expense object
                         val newExpense = Expense(
                             exID = exId,

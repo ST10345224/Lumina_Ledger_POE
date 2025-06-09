@@ -90,7 +90,7 @@ fun GoalsScreen(onAddGoal: () -> Unit) {
     // State to hold any error messages during data fetching
     val error = remember { mutableStateOf<String?>(null) }
     // Firestore instance
-    val firestore = com.google.firebase.Firebase.firestore
+    com.google.firebase.Firebase.firestore
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Background with slight overlay for better readability

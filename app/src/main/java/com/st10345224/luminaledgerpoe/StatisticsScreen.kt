@@ -50,7 +50,7 @@ import me.bytebeats.views.charts.line.render.xaxis.SimpleXAxisDrawer
 import me.bytebeats.views.charts.line.render.yaxis.SimpleYAxisDrawer
 import me.bytebeats.views.charts.simpleChartAnimation
 
-// Import your ViewModel and Factory from their actual package
+// Import ViewModel and Factory from their actual package
 import com.st10345224.luminaledgerpoe.viewmodels.StatisticsViewModel
 import com.st10345224.luminaledgerpoe.viewmodels.StatisticsViewModelFactory
 
@@ -101,7 +101,7 @@ fun StatisticsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "From:", color = Color.White, style = MaterialTheme.typography.bodyLarge)
+                Text(text = "From:", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = dateFormatter.format(Date(startDate)),
@@ -132,7 +132,7 @@ fun StatisticsScreen(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Text(text = "To:", color = Color.White, style = MaterialTheme.typography.bodyLarge)
+                Text(text = "To:", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = dateFormatter.format(Date(endDate)),
@@ -163,7 +163,7 @@ fun StatisticsScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Line Graph Implementation with me.bytebeats.views.charts API ---
+            // Line Graph Implementation with me.bytebeats.views.charts API
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -253,7 +253,7 @@ fun StatisticsScreen(
                         ),
                         xAxisDrawer = SimpleXAxisDrawer(
                             labelTextColor = Color.Gray,
-                            // Adjust label text size further if needed, 8.sp is often good for dense charts
+                            // Adjust label text size further if needed
                             labelTextSize = 9.sp
                         ),
                         yAxisDrawer = SimpleYAxisDrawer(
@@ -271,7 +271,7 @@ fun StatisticsScreen(
             val totalExpenses = dailyExpenseData.sumOf { it.totalAmount }
             Text(
                 text = "Total Expenses for Period: R${"%.2f".format(totalExpenses)}",
-                color = Color.White,
+                color = Color.Black,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )

@@ -4,14 +4,14 @@ import androidx.annotation.DrawableRes // Import for resource IDs
 
 // This data class defines what an achievement IS
 data class AchievementDefinition(
-    val id: String,          // Unique ID for the achievement (e.g., "first_expense", "daily_logger")
+    val id: String,          // Unique ID for the achievement
     val name: String,        // Display name
     val description: String, // How to achieve it
-    @DrawableRes val iconResId: Int, // Local drawable resource ID (e.g., R.drawable.ic_trophy)
-    val target: Int          // The target value to unlock it (e.g., 10 expenses, 7 consecutive days)
+    @DrawableRes val iconResId: Int, // Local drawable resource ID
+    val target: Int          // The target value to unlock it
 )
 
-// This object holds all the achievement definitions in your app
+// This object holds all the achievement definitions
 object AppAchievements {
     val ALL_ACHIEVEMENTS = listOf(
         AchievementDefinition(
@@ -35,7 +35,7 @@ object AppAchievements {
             iconResId = R.drawable.ic_calendar,
             target = 30
         )
-        // Add all your other achievements here
+
     )
 
     // Helper function to easily get an achievement definition by its ID
